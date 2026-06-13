@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  extensions = [pgvector(map: "vector"), citext]
+}
+
+
+enum Role {
+  freelancer
+  agency
+}
+
+enum TestimonialStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum RequestStatus {
+  pending
+  completed
+  expired
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  name                  String
+  email                 String    @unique @db.Citext
+  password_hash         String
+  role                  Role
+  company_name          String?
+  avatar_url            String?
+  is_verified           Boolean   @default(false)
+  verified_at           DateTime?
+  deleted_at            DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  testimonials          Testimonial[]
+  testimonialRequests   TestimonialRequest[]
+  subscription          Subscription?
+}
+
+model Testimonial {
+  id                    String            @id @default(uuid())
+  user_id               String
+  client_name           String
+  client_email          String?
+  video_url             String?
+  transcript            String?
+  transcript_language   String?
+  status                TestimonialStatus @default(pending)
+  duration              Int?
+  thumbnail_url         String?
+  is_published          Boolean           @default(false)
+  published_at          DateTime?
+  embedding             Unsupported("vector(768)")?
+  deleted_at            DateTime?
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([status])
+  @@index([user_id, status])
+  @@index([client_email])
+}
+
+model TestimonialRequest {
+  id           String        @id @default(uuid())
+  user_id      String
+  client_name  String
+  client_email String
+  token        String        @unique
+  status       RequestStatus @default(pending)
+  expires_at   DateTime
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([user_id])
+}
+
+model Subscription {
+  id                     String   @id @default(uuid())
+  user_id                String   @unique
+  stripe_customer_id     String
+  stripe_subscription_id String
+  plan                   String
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  user                   User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
