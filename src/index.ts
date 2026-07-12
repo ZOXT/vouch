@@ -4,6 +4,7 @@ import express from "express";
 import pool from "./config/db";
 import { errorHandler } from "./middlewares/errorHandler";
 import authRouter from "./routes/auth.routes";
+import userRouter from "./routes/user.routes"
 
 const app = express();
 app.use(express.json());
@@ -25,3 +26,4 @@ app.listen(process.env.PORT, () => {
 });
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
