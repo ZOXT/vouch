@@ -5,6 +5,7 @@ import pool from "./config/db";
 import { errorHandler } from "./middlewares/errorHandler";
 import authRouter from "./routes/auth.routes";
 import userRouter from "./routes/user.routes"
+import testimonialRequestRouter from "./routes/testimonial-request.routes";
 
 const app = express();
 app.use(express.json());
@@ -27,3 +28,4 @@ app.listen(process.env.PORT, () => {
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/testimonial-requests", testimonialRequestRouter);
