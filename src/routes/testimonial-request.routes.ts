@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { RequestTestimonial } from "../controllers/testimonial-request.controller";
+import { getRequestByToken } from "../controllers/testimonial-request.controller";
 import { protect } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate";
 import { createTestimonialRequestSchema } from "../validators/testimonial-request.validator";
@@ -7,5 +8,6 @@ import { createTestimonialRequestSchema } from "../validators/testimonial-reques
 
 const router = Router();
 router.post("/", protect, validate(createTestimonialRequestSchema),RequestTestimonial);
+router.get("/r/:token", getRequestByToken);
 
 export default router

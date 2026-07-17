@@ -31,3 +31,23 @@ export const createTestimonialRequest = async ( userId: string, clientName: stri
 
   return { request,url, };
 };
+
+export const getTestimonialRequestByToken = async (token: string) => {
+  const request = await prisma.testimonialRequest.findUnique({
+    where: { token }
+  });
+
+  if (!request) {
+    throw new ApiError(404, "Request not found");
+  }
+
+  if (request.status !== "pending") {
+    throw new ApiError(400, "This testimonial request has already been completed");
+  }
+
+  if (request.expires_at < new Date()) {
+    throw new ApiError(400, "This testimonial request has expired");
+  }
+
+  return request;
+};

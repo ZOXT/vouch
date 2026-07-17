@@ -8,3 +8,4 @@ export const getUserById = async (id: string) => {
   const { password_hash, ...safeUser } = user;
   return safeUser;
 };
+  
