@@ -6,6 +6,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import authRouter from "./routes/auth.routes";
 import userRouter from "./routes/user.routes"
 import testimonialRequestRouter from "./routes/testimonial-request.routes";
+import "./config/env";
 
 const app = express();
 app.use(express.json());
