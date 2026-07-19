@@ -6,6 +6,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import authRouter from "./routes/auth.routes";
 import userRouter from "./routes/user.routes"
 import testimonialRequestRouter from "./routes/testimonial-request.routes";
+import testimonialRouter from "./routes/testimonial.routes";
 import "./config/env";
 
 const app = express();
@@ -30,3 +31,4 @@ app.listen(process.env.PORT, () => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/testimonial-requests", testimonialRequestRouter);
+app.use("/api/v1/testimonials", testimonialRouter);

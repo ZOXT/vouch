@@ -12,3 +12,4 @@ export const createTestimonialRequestSchema = z.object({
     .email("Invalid email address")
     .optional(),
 });
+export type CreateTestimonialRequest = z.infer<typeof createTestimonialRequestSchema>

@@ -51,3 +51,22 @@ export const getTestimonialRequestByToken = async (token: string) => {
 
   return request;
 };
+
+export const markRequestCompleted = async (token: string) => {
+  const request = await prisma.testimonialRequest.findUnique({
+    where: { token }
+  });
+
+  if (!request) throw new ApiError(404, "Request not found");
+  if (request.status === "completed") throw new ApiError(400, "Already submitted");
+
+  await prisma.testimonialRequest.update({
+    where: { token },
+    data: {
+      status: "completed",
+      completed_at: new Date()
+    }
+  });
+
+  return request;
+};
