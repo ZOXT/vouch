@@ -81,6 +81,7 @@ model TestimonialRequest {
   token        String        @unique
   status       RequestStatus @default(pending)
   expires_at   DateTime
+  completed_at DateTime?
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
 

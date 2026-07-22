@@ -6,7 +6,9 @@ import { Agent } from "https";
 
 export const s3Client = new S3Client({
   region: env.AWS_REGION,
-  
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
+
   // Only pass credentials in development
   // Production: SDK automatically uses IAM role
   ...(env.NODE_ENV !== "production" && 
@@ -28,3 +30,4 @@ export const s3Client = new S3Client({
     }),
   }),
 });
+

@@ -31,9 +31,12 @@ export const generatePresignedUploadUrl = async (
         Bucket: env.AWS_BUCKET_NAME, 
         Key: key,
         ContentType: fileType,
-        ContentLength: maxFileSizeBytes, 
       }),
-      { expiresIn: env.PRESIGNED_URL_EXPIRY } 
+      { expiresIn: env.PRESIGNED_URL_EXPIRY,
+        signableHeaders: new Set(["content-type"]),
+        
+      } 
+      
     );
 
     console.log(env.AWS_BUCKET_NAME)

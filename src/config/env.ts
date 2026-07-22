@@ -17,6 +17,8 @@ const envSchema = z.object({
   ALLOWED_VIDEO_TYPES: z.string().transform(str => str.split(",")).default(["video/mp4,video/quicktime,video/webm"]),
   MAX_FILE_SIZE_MB: z.coerce.number().default(100),
   PRESIGNED_URL_EXPIRY: z.coerce.number().default(900),
+
+  REDIS_URL : z.string(),
 });
 
 export const env = envSchema.parse(process.env);
