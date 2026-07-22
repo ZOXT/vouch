@@ -1,12 +1,13 @@
 import { Worker, Job } from "bullmq";
 import { env } from "../config/env";
 import { prisma } from "../config/prisma";
+import { logger } from "../config/logger";
 import type { TranscriptionJobData } from "../queues/transcription.queue";
 
 const processTranscript = async (job: Job<TranscriptionJobData>) => {
   const { testimonialId, videoUrl } = job.data;
 
-  console.log(`Processing transcription for testimonial ${testimonialId}`);
+  logger.info(`Processing transcription for testimonial ${testimonialId}`);
 
   try {
     await prisma.testimonial.update({
@@ -27,7 +28,7 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
       }
     });
 
-    console.log(`Transcription completed for ${testimonialId}`);
+    logger.info(`Transcription completed for ${testimonialId}`);
     
   } catch (error) {
 
@@ -51,9 +52,9 @@ export const transcriptionWorker = new Worker(
 );
 
 transcriptionWorker.on("completed", (job) => {
-  console.log(`Job ${job.id} completed`);
+  logger.info(`Job ${job.id} completed`);
 });
 
 transcriptionWorker.on("failed", (job, error) => {
-  console.error(`Job ${job?.id} failed:`, error.message);
+  logger.error({ err: error, jobId: job?.id }, "Job failed");
 });

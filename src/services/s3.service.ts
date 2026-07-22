@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { s3Client } from "../config/s3";
 import { ApiError } from "../utils/ApiError";
 import { getTestimonialRequestByToken } from "./testimonial-request.service";
-
+import { logger } from "../config/logger";
 
 const maxFileSizeBytes = env.MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -39,11 +39,11 @@ export const generatePresignedUploadUrl = async (
       
     );
 
-    console.log(env.AWS_BUCKET_NAME)
+    logger.debug({ bucket: env.AWS_BUCKET_NAME }, "Generated presigned upload URL");
 
     return { url, key };
   } catch (error) {
-    console.error("Presigned URL generation failed:", error);
+    logger.error({ err: error }, "Presigned URL generation failed");
     throw new ApiError(500, "Failed to generate upload URL");
   }
 };
