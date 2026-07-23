@@ -4,6 +4,7 @@ import { z } from "zod";
 const envSchema = z.object({
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string(),
+  JWT_EXPIRES_IN: z.string().default("7d"),
   AWS_REGION: z.string().default("us-east-1"),
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),

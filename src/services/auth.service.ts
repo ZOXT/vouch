@@ -2,6 +2,7 @@
   import {prisma} from "../config/prisma";
   import type { RegisterInput, LoginInput } from "../validators/auth.validator";
   import bcrypt from "bcryptjs";
+  import { env } from "../config/env";
   import { ApiError } from "../utils/ApiError";
   import { slugify } from "../utils/slugify";
   import { nanoid } from "nanoid";
@@ -61,8 +62,10 @@
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN }as jwt.SignOptions 
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] }
+      // JWT_EXPIRES_IN is validated as string by Zod, but jsonwebtoken expects
+// a specific StringValue union. We know our default "7d" is valid.
     );
 
     const { password_hash, ...safeUser } = user;
