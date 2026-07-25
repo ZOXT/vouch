@@ -16,9 +16,24 @@ enum Role {
 
 enum TestimonialStatus {
   pending
-  processing
+  media_processing
+  transcribing
+  ai_processing
   completed
   failed
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum Sentiment {
+  positive
+  neutral
+  negative
+  mixed
 }
 
 enum RequestStatus {
@@ -28,67 +43,92 @@ enum RequestStatus {
 }
 
 model User {
-  id                    String    @id @default(uuid())
+  id                    String               @id @default(uuid())
   name                  String
-  slug                  String @unique
-  email                 String    @unique @db.Citext
+  email                 String               @unique @db.Citext
   password_hash         String
   role                  Role
   company_name          String?
   avatar_url            String?
-  is_verified           Boolean   @default(false)
+  slug                  String               @unique
+  is_verified           Boolean              @default(false)
   verified_at           DateTime?
   deleted_at            DateTime?
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  created_at            DateTime             @default(now())
+  updated_at            DateTime             @updatedAt
 
   testimonials          Testimonial[]
   testimonialRequests   TestimonialRequest[]
   subscription          Subscription?
 }
 
-model Testimonial {
-  id                    String            @id @default(uuid())
-  user_id               String
-  client_name           String
-  client_email          String?
-  video_url             String?
-  transcript            String?
-  transcript_language   String?
-  status                TestimonialStatus @default(pending)
-  duration              Int?
-  thumbnail_url         String?
-  is_published          Boolean           @default(false)
-  published_at          DateTime?
-  embedding             Unsupported("vector(768)")?
-  deleted_at            DateTime?
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-
-  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@index([user_id])
-  @@index([status])
-  @@index([user_id, status])
-  @@index([client_email])
-}
-
 model TestimonialRequest {
-  id           String        @id @default(uuid())
-  user_id      String
-  client_name  String
-  client_email String?
-  token        String        @unique
-  status       RequestStatus @default(pending)
-  expires_at   DateTime
-  completed_at DateTime?
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
+  id                          String        @id @default(uuid())
+  user_id                     String
+  client_name                 String
+  client_email                String?
+  token                       String        @unique
+  status                      RequestStatus @default(pending)
+  expires_at                  DateTime
+  completed_at                DateTime?
+  presigned_url_generated_at  DateTime?
+  created_at                  DateTime      @default(now())
+  updated_at                  DateTime      @updatedAt
 
-  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user                        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  testimonial                 Testimonial?
 
   @@index([token])
   @@index([user_id])
+}
+
+model Testimonial {
+  id                  String            @id @default(uuid())
+  user_id             String
+
+  request_id          String?           @unique
+  client_name         String
+  client_email        String?
+
+  video_key           String?
+  audio_key           String?
+  thumbnail_key       String?
+  mime_type           String?
+  file_size_bytes     BigInt?
+  duration_seconds    Int?
+
+  transcript          String?
+  transcript_redacted String?
+
+  industry            String?
+  sentiment           Sentiment?
+  pain_points         String[]
+  outcomes            String[]
+  objections          String[]
+  metadata            Json?
+
+  pii_detected        Boolean           @default(false)
+  risk_level          RiskLevel?
+  risk_score          Float?
+  failure_reason      String?
+
+  status              TestimonialStatus  @default(pending)
+  processed_at        DateTime?
+  is_published        Boolean           @default(false)
+  published_at        DateTime?
+  deleted_at          DateTime?
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+
+  embedding           Unsupported("vector(768)")?
+
+  user                User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  request             TestimonialRequest? @relation(fields: [request_id], references: [id])
+
+  @@index([user_id])
+  @@index([status])
+  @@index([industry])
+  @@index([user_id, status])
 }
 
 model Subscription {
