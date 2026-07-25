@@ -16,26 +16,19 @@ export const confirmTestimonialUpload = async (
   const testimonial = await prisma.testimonial.create({
     data: {
       user_id: request.user_id,
+      request_id: request.id,
       client_name: request.client_name,
       client_email: request.client_email,
-      video_url: `https://${env.AWS_BUCKET_NAME}.s3.${env.AWS_REGION}.amazonaws.com/${key}`,
+      video_key: key,
       status: "pending",
-      duration,
+      duration_seconds: duration,
     }
   });
 
   // Push job to queue
-  await transcriptionQueue.add(
-    "transcribe",
-    {
-      testimonialId: testimonial.id,
-      videoUrl: testimonial.video_url,
-      userId: testimonial.user_id,
-    } as TranscriptionJobData,
-    {
-      jobId: testimonial.id, 
-    }
-  );
+  await transcriptionQueue.add("process", {
+    testimonialId: testimonial.id
+  });
 
   return testimonial;
 };
