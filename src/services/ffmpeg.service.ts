@@ -98,74 +98,76 @@ export const validateMedia = (filePath: string): Promise<MediaInfo> => {
   });
 };
 
-
 export const generateThumbnail = (
   inputPath: string,
   outputDirectory: string,
-  duration: number
-): Promise<string> =>{
-
+  duration: number,
+): Promise<string> => {
   //v short videos might not even reach the 1s mark
   const timestamp = duration >= 2 ? 1 : duration / 2;
 
-  const outputPath = path.join(outputDirectory, "thumbnail.jpg")
+  const outputPath = path.join(outputDirectory, "thumbnail.jpg");
 
   return new Promise((resolve, reject) => {
-    ffmpeg(inputPath).screenshots({
-      timestamps: [timestamp],
-      filename: "thumbnail.jpg",
-      folder: outputDirectory,
-      size: "720x?"
+    ffmpeg(inputPath)
+      .screenshots({
+        timestamps: [timestamp],
+        filename: "thumbnail.jpg",
+        folder: outputDirectory,
+        size: "720x?",
+      })
+      .on("end", () => {
+        logger.info(
+          {
+            inputPath,
+            outputPath,
+          },
+          "Thumbnail generated successfully",
+        );
+        resolve(outputPath);
+      })
+      .on("error", (err) => {
+        reject(
+          new MediaProcessingError(
+            `Failed to generate thumbnail: ${err.message}`,
+          ),
+        );
+      });
+  });
+};
 
-    }).on("end", ()=>{
-      logger.info({
-        inputPath,
-        outputPath
-      },"Thumbnail generated successfully");
-      resolve(outputPath)
-    })
-    .on("error",(err)=>{
-       reject(new MediaProcessingError(`Failed to generate thumbnail: ${err.message}`
+//extract audio from the video as mp3 and returns absolute path of the generated audio file
 
-       ));
-
-    })
-  })
-
-}
-
-//extract audio from the video as mp3 and returns absolute path of the generated audio file 
-
-export const extractAudio = (inputPath: string, outputDirectory: string) : Promise<string> =>{
-
+export const extractAudio = (
+  inputPath: string,
+  outputDirectory: string,
+): Promise<string> => {
   const outputPath = path.join(outputDirectory, "audio.mp3");
 
-  return new Promise((resolve,reject) => {
-    ffmpeg(inputPath).
-    noVideo()
-    .audioCodec("libmp3lame")
-    .audioBitrate("128k")
-    .output(outputPath)
-    .on("end", ()=>{
-      logger.info({
-        inputPath,
-        outputPath
-      },"Audio extracted successfully");
-      resolve(outputPath)
-    })
-    .on("error",(err)=>{
-      reject(
-         new MediaProcessingError(`
-        Failed to extract audio: ${err.message}`
-      )
-
-      );
-
-    })
-    .run()
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .noVideo()
+      .audioCodec("pcm_s16le")
+      .audioFrequency(16000)
+      .audioChannels(1)
+      .format("wav")
+      .output(outputPath)
+      .on("end", () => {
+        logger.info(
+          {
+            inputPath,
+            outputPath,
+          },
+          "Audio extracted successfully",
+        );
+        resolve(outputPath);
+      })
+      .on("error", (err) => {
+        reject(
+          new MediaProcessingError(`
+        Failed to extract audio: ${err.message}`),
+        );
+      })
+      .run();
   });
-
-}
-
-
-
+};

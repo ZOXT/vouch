@@ -83,8 +83,8 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
 
     // 8. Extract audio
     const audioPath = await extractAudio(videoPath, tempDir);
-    const audioKey = `audio/${testimonialId}/audio.mp3`;
-    await uploadFile(audioPath, audioKey, "audio/mpeg");
+    const audioKey = `audio/${testimonialId}/audio.wav`;
+    await uploadFile(audioPath, audioKey, "audio/wav");
 
     await job.updateProgress(80);
 
@@ -181,7 +181,7 @@ mediaWorker.on("failed", (job, err) => {
   logger.error({ jobId: job?.id, err: err.message }, "Media job failed");
 });
 
-// Graceful shutdown
+
 const gracefulShutdown = async () => {
   logger.info("Shutting down media worker...");
   await mediaWorker.close();
@@ -191,4 +191,4 @@ const gracefulShutdown = async () => {
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
 
-logger.info("🚀 Media worker started, waiting for jobs...");
+logger.info("Media worker started, waiting for jobs...");
