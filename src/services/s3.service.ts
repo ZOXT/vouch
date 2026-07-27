@@ -123,3 +123,24 @@ export const uploadFile = async (
     throw new S3UploadError(`Failed to upload "${key}" to S3`);
   }
 };
+
+export const generateDownloadPresignedUrl = async (
+  key: string
+): Promise<string> => {
+  try {
+    return await getSignedUrl(
+      s3Client,
+      new GetObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+      }),
+      {
+        expiresIn: 900,
+      }
+    );
+  } catch (err) {
+    logger.error({ key, err }, "Failed to generate download URL");
+
+    throw new Error("Failed to generate download URL");
+  }
+};

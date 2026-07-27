@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { prisma } from "../config/prisma";
-import { TestimonialRequest } from "@prisma/client";
+import { Prisma, TestimonialRequest } from "@prisma/client";
 import { ApiError } from "../utils/ApiError";
 
 export const createTestimonialRequest = async ( userId: string, clientName: string, clientEmail?: string): Promise<{
@@ -53,20 +53,27 @@ export const getTestimonialRequestByToken = async (token: string) => {
 };
 
 export const markRequestCompleted = async (token: string) => {
-  const request = await prisma.testimonialRequest.findUnique({
-    where: { token }
-  });
+  try {
+    const request = await prisma.testimonialRequest.update({
+      where: {
+        token,
+        status: "pending"
+      },
+      data: {
+        status: "completed",
+        completed_at: new Date()
+      }
+    });
 
-  if (!request) throw new ApiError(404, "Request not found");
-  if (request.status === "completed") throw new ApiError(400, "Already submitted");
-
-  await prisma.testimonialRequest.update({
-    where: { token },
-    data: {
-      status: "completed",
-      completed_at: new Date()
+    return request;
+    
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      throw new ApiError(400, "Request already completed or not found");
     }
-  });
-
-  return request;
+    throw err;
+  }
 };

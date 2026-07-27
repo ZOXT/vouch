@@ -20,6 +20,8 @@ const envSchema = z.object({
   PRESIGNED_URL_EXPIRY: z.coerce.number().default(900),
 
   REDIS_URL : z.string(),
+
+  GROQ_API_KEY: z.string(),
 });
 
 export const env = envSchema.parse(process.env);
