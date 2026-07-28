@@ -1,40 +1,45 @@
 import Groq from "groq-sdk";
 import { env } from "../config/env";
 import { logger } from "../config/logger";
-import { generateDownloadPresignedUrl } from "./s3.service";
 
-const groq = new Groq({
-  apiKey: env.GROQ_API_KEY,
-});
+const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 
-export const transcribeAudio = async (audioKey: string): Promise<string> => {
+export class TranscriptionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TranscriptionError";
+  }
+}
+
+export const transcribeAudio = async (audioUrl: string): Promise<string> => {
   try {
-    logger.info({ audioKey }, "Transcribing audio with Groq Whisper");
-
-    const audioUrl = await generateDownloadPresignedUrl(audioKey);
-
-    const response = await fetch(audioUrl);
-    const audioBlob = await response.blob();
+    logger.info("Sending audio to Groq for transcription");
 
     const transcription = await groq.audio.transcriptions.create({
-      file: audioBlob,
+      url: audioUrl,
       model: "whisper-large-v3",
       response_format: "verbose_json",
+      language: "en",
+      temperature: 0,
     });
 
-    logger.info(
-      {
-        audioKey,
-        transcriptLength: transcription.text.length,
-      },
-      "Transcription successful"
-    );
+    const transcript = typeof transcription === "string"
+      ? transcription
+      : transcription.text;
 
-    return transcription.text;
-  } catch (error) {
-    logger.error({ error, audioKey }, "Groq transcription failed");
-    throw new Error(
-      `Groq transcription failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    if (!transcript?.trim()) {
+      throw new TranscriptionError("Groq returned an empty transcript");
+    }
+
+    logger.info({
+      transcriptLength: transcript.length,
+    }, "Transcription completed");
+
+    return transcript;
+  } catch (err) {
+    logger.error({ err }, "Groq transcription failed");
+    throw new TranscriptionError(
+      err instanceof Error ? err.message : "Unknown transcription error"
     );
   }
 };
