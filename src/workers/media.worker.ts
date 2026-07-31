@@ -169,7 +169,7 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
 };
 
 export const mediaWorker = new Worker<MediaJobData>(
-  "media",
+  "media",  
   processMediaJob,
   {
     connection: { url: env.REDIS_URL },

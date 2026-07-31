@@ -3,10 +3,8 @@ import { env } from "../config/env";
 
 export interface TranscriptionJobData {
   testimonialId: string;
-  videoUrl: string;
   userId: string;
 }
-
 
 export const transcriptionQueue = new Queue("transcription",{
     connection :{

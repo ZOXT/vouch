@@ -108,6 +108,7 @@ model Testimonial {
   metadata            Json?
 
   pii_detected        Boolean           @default(false)
+  pii_risk_score      Float?
   risk_level          RiskLevel?
   risk_score          Float?
   failure_reason      String?

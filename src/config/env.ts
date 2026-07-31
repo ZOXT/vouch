@@ -22,6 +22,7 @@ const envSchema = z.object({
   REDIS_URL : z.string(),
 
   GROQ_API_KEY: z.string(),
+  GROQ_MODEL: z.string()
 });
 
 export const env = envSchema.parse(process.env);
