@@ -16,7 +16,13 @@ import type { AIJobData } from "../queues/ai.queue";
 const processAIJob = async (job: Job<AIJobData>) => {
   const { testimonialId } = job.data;
 
-  logger.info({ testimonialId }, "Starting AI processing");
+  logger.info(
+    {
+      jobId: job.id,
+      data: job.data,
+    },
+    "AI JOB RECEIVED"
+  );
 
   try {
     const testimonial = await prisma.testimonial.findUnique({
@@ -43,6 +49,7 @@ const processAIJob = async (job: Job<AIJobData>) => {
       },
       data: {
         status: "ai_processing",
+        processing_started_at: new Date(),
       },
     });
 
@@ -70,23 +77,46 @@ const processAIJob = async (job: Job<AIJobData>) => {
 
     await job.updateProgress(80);
 
+    const completedAt = new Date();
+
     await prisma.testimonial.update({
       where: {
         id: testimonialId,
       },
       data: {
-        masked_transcript: sanitizedTranscript,
+        transcript_redacted: sanitizedTranscript,
         pii_detected: piiResult.hasPII,
         pii_risk_score: privacyRisk.score,
-        summary: analysis.summary,
         industry: analysis.industry,
         sentiment: analysis.sentiment,
+        summary: analysis.summary,
         keywords: analysis.keywords,
-        pain_points: analysis.painPoints,
         customer_type: analysis.customerType,
         language: analysis.language,
         confidence_score: analysis.confidence,
+        pain_points: analysis.painPoints,
+        outcomes: analysis.outcomes,
+        objections: analysis.objections,
         status: "completed",
+        processed_at: completedAt,
+        processing_completed_at: completedAt,
+        total_processing_ms: testimonial.processing_started_at?.getTime()
+          ? completedAt.getTime() - testimonial.processing_started_at.getTime()
+          : null,
+      },
+    });
+
+    await prisma.aIUsage.create({
+      data: {
+        testimonial_id: testimonialId,
+        provider: "groq",
+        model: env.AI_MODEL ?? env.GROQ_MODEL,
+        operation: "analysis",
+        prompt_tokens: analysis.usage.promptTokens,
+        completion_tokens: analysis.usage.completionTokens,
+        total_tokens: analysis.usage.totalTokens,
+        latency_ms: analysis.usage.latencyMs,
+        success: true,
       },
     });
 
@@ -121,6 +151,17 @@ const processAIJob = async (job: Job<AIJobData>) => {
         data: {
           status: "failed",
           failure_reason: `AI processing failed: ${message}`,
+        },
+      });
+
+      await prisma.aIUsage.create({
+        data: {
+          testimonial_id: testimonialId,
+          provider: "groq",
+          model: env.AI_MODEL ?? env.GROQ_MODEL,
+          operation: "analysis",
+          success: false,
+          error_message: message,
         },
       });
     } catch (dbError) {

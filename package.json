@@ -2,13 +2,16 @@
   "name": "vouch",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "worker": "tsx --env-file=.env src/workers/transcription.worker.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+   "worker:media": "tsx --env-file=.env src/workers/media.worker.ts",
+"worker:transcription": "tsx --env-file=.env src/workers/transcription.worker.ts",
+"worker:ai": "tsx --env-file=.env src/workers/ai.worker.ts"
+    
   },
   "keywords": [],
   "author": "",

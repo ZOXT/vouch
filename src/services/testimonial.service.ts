@@ -1,7 +1,8 @@
 import {prisma} from "../config/prisma";
 import {env} from "../config/env"
-import {transcriptionQueue, TranscriptionJobData} from "../queues/transcription.queue"
+import { mediaQueue } from "../queues/media.queue";
 import { markRequestCompleted } from "./testimonial-request.service";
+import { logger } from "../config/logger";
 import "dotenv/config";
 
 
@@ -25,10 +26,14 @@ export const confirmTestimonialUpload = async (
     }
   });
 
-  // Push job to queue
-  await transcriptionQueue.add("process", {
-    testimonialId: testimonial.id
+  await mediaQueue.add("process", {
+    testimonialId: testimonial.id,
   });
+
+  logger.info(
+    { testimonialId: testimonial.id },
+    "MEDIA JOB QUEUED"
+  );
 
   return testimonial;
 };

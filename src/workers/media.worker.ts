@@ -24,6 +24,14 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
   const { testimonialId } = job.data;
   let tempDir: string | null = null;
 
+  logger.info(
+    {
+      jobId: job.id,
+      data: job.data,
+    },
+    "MEDIA JOB RECEIVED"
+  );
+
   try {
     const testimonial = await prisma.testimonial.findUnique({
       where: { id: testimonialId },
@@ -59,25 +67,32 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
     await job.updateProgress(10);
 
     tempDir = await createTempDirectory(testimonialId);
+    logger.info({ testimonialId, tempDir }, "Created temp directory for media processing");
 
     const videoPath = path.join(tempDir, "video.mp4");
+    logger.info({ testimonialId, videoPath, s3Key: testimonial.video_key }, "Downloading media from S3");
     await downloadFromS3(testimonial.video_key, videoPath);
+    logger.info({ testimonialId, videoPath }, "Media download completed");
 
     await job.updateProgress(25);
 
     const mediaInfo = await validateMedia(videoPath);
+    logger.info({ testimonialId, mediaInfo }, "Media validation completed");
 
     await job.updateProgress(40);
 
     const thumbnailPath = await generateThumbnail(videoPath, tempDir, mediaInfo.duration);
+    logger.info({ testimonialId, thumbnailPath }, "Thumbnail generated");
     const thumbnailKey = `thumbnails/${testimonialId}/thumbnail.jpg`;
     await uploadFile(thumbnailPath, thumbnailKey, "image/jpeg");
 
     await job.updateProgress(60);
 
     const audioPath = await extractAudio(videoPath, tempDir);
+    logger.info({ testimonialId, audioPath }, "Audio extracted");
     const audioKey = `audio/${testimonialId}/audio.wav`;
     await uploadFile(audioPath, audioKey, "audio/wav");
+    logger.info({ testimonialId, audioKey }, "Audio uploaded to S3");
 
     await job.updateProgress(80);
 
@@ -108,6 +123,11 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
         removeOnComplete: 100,
         removeOnFail: 100,
       }
+    );
+
+    logger.info(
+      { testimonialId },
+      "TRANSCRIPTION JOB QUEUED"
     );
 
     await job.updateProgress(100);

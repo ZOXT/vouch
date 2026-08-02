@@ -1,13 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
   extensions = [pgvector(map: "vector"), citext]
 }
-
 
 enum Role {
   freelancer
@@ -43,88 +42,90 @@ enum RequestStatus {
 }
 
 model User {
-  id                    String               @id @default(uuid())
-  name                  String
-  email                 String               @unique @db.Citext
-  password_hash         String
-  role                  Role
-  company_name          String?
-  avatar_url            String?
-  slug                  String               @unique
-  is_verified           Boolean              @default(false)
-  verified_at           DateTime?
-  deleted_at            DateTime?
-  created_at            DateTime             @default(now())
-  updated_at            DateTime             @updatedAt
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique @db.Citext
+  password_hash String
+  role          Role
+  company_name  String?
+  avatar_url    String?
+  slug          String    @unique
+  is_verified   Boolean   @default(false)
+  verified_at   DateTime?
+  deleted_at    DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
 
-  testimonials          Testimonial[]
-  testimonialRequests   TestimonialRequest[]
-  subscription          Subscription?
+  testimonials        Testimonial[]
+  testimonialRequests TestimonialRequest[]
+  subscription        Subscription?
 }
 
 model TestimonialRequest {
-  id                          String        @id @default(uuid())
-  user_id                     String
-  client_name                 String
-  client_email                String?
-  token                       String        @unique
-  status                      RequestStatus @default(pending)
-  expires_at                  DateTime
-  completed_at                DateTime?
-  presigned_url_generated_at  DateTime?
-  created_at                  DateTime      @default(now())
-  updated_at                  DateTime      @updatedAt
+  id                         String        @id @default(uuid())
+  user_id                    String
+  client_name                String
+  client_email               String?
+  token                      String        @unique
+  status                     RequestStatus @default(pending)
+  expires_at                 DateTime
+  completed_at               DateTime?
+  presigned_url_generated_at DateTime?
+  created_at                 DateTime      @default(now())
+  updated_at                 DateTime      @updatedAt
 
-  user                        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  testimonial                 Testimonial?
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  testimonial Testimonial?
 
   @@index([token])
   @@index([user_id])
 }
 
 model Testimonial {
-  id                  String            @id @default(uuid())
-  user_id             String
+  id                      String                      @id @default(uuid())
+  user_id                 String
+  request_id              String?                     @unique
+  client_name             String
+  client_email            String?
+  video_key               String?
+  audio_key               String?
+  thumbnail_key           String?
+  mime_type               String?
+  file_size_bytes         BigInt?
+  duration_seconds        Int?
+  transcript              String?
+  transcript_redacted     String?
+  industry                String?
+  sentiment               Sentiment?
+  summary                 String?
+  keywords                String[]
+  customer_type           String?
+  language                String?
+  confidence_score        Float?
+  pain_points             String[]
+  outcomes                String[]
+  objections              String[]
+  metadata                Json?
+  pii_detected            Boolean                     @default(false)
+  pii_risk_score          Float?
+  risk_level              RiskLevel?
+  risk_score              Float?
+  failure_reason          String?
+  processing_started_at   DateTime?
+  processing_completed_at DateTime?
+  total_processing_ms     Int?
+  ai_usage                AIUsage[]
+  status                  TestimonialStatus           @default(pending)
+  processed_at            DateTime?
+  is_published            Boolean                     @default(false)
+  published_at            DateTime?
+  deleted_at              DateTime?
+  created_at              DateTime                    @default(now())
+  updated_at              DateTime                    @updatedAt
+  embedding               Unsupported("vector(768)")?
 
-  request_id          String?           @unique
-  client_name         String
-  client_email        String?
-
-  video_key           String?
-  audio_key           String?
-  thumbnail_key       String?
-  mime_type           String?
-  file_size_bytes     BigInt?
-  duration_seconds    Int?
-
-  transcript          String?
-  transcript_redacted String?
-
-  industry            String?
-  sentiment           Sentiment?
-  pain_points         String[]
-  outcomes            String[]
-  objections          String[]
-  metadata            Json?
-
-  pii_detected        Boolean           @default(false)
-  pii_risk_score      Float?
-  risk_level          RiskLevel?
-  risk_score          Float?
-  failure_reason      String?
-
-  status              TestimonialStatus  @default(pending)
-  processed_at        DateTime?
-  is_published        Boolean           @default(false)
-  published_at        DateTime?
-  deleted_at          DateTime?
-  created_at          DateTime          @default(now())
-  updated_at          DateTime          @updatedAt
-
-  embedding           Unsupported("vector(768)")?
-
-  user                User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  request             TestimonialRequest? @relation(fields: [request_id], references: [id])
+  user    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  request TestimonialRequest? @relation(fields: [request_id], references: [id])
 
   @@index([user_id])
   @@index([status])
@@ -141,5 +142,27 @@ model Subscription {
   created_at             DateTime @default(now())
   updated_at             DateTime @updatedAt
 
-  user                   User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model AIUsage {
+  id                String   @id @default(uuid())
+  testimonial_id    String
+  provider          String
+  model             String
+  operation         String   @default("analysis")
+  prompt_tokens     Int?
+  completion_tokens Int?
+  total_tokens      Int?
+  latency_ms        Int?
+  success           Boolean  @default(true)
+  error_message     String?
+  created_at        DateTime @default(now())
+
+  testimonial Testimonial @relation(fields: [testimonial_id], references: [id], onDelete: Cascade)
+
+  @@index([testimonial_id])
+  @@index([provider])
+  @@index([model])
+  @@index([operation])
 }

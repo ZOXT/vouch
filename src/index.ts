@@ -18,12 +18,11 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-app.use(errorHandler);
+app.use(requestLogger);
 
 app.listen(process.env.PORT, () => {
   logger.info(`Server running on port ${process.env.PORT}`);
 
-  app.use(requestLogger);
 
 
 
@@ -36,3 +35,5 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/testimonial-requests", testimonialRequestRouter);
 app.use("/api/v1/testimonials", testimonialRouter);
+
+app.use(errorHandler);

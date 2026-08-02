@@ -9,7 +9,13 @@ import { transcribeAudio } from "../services/transcription.service";
 const processTranscript = async (job: Job<TranscriptionJobData>) => {
   const { testimonialId } = job.data;
 
-  logger.info({ testimonialId }, "Processing transcription");
+  logger.info(
+    {
+      jobId: job.id,
+      data: job.data,
+    },
+    "TRANSCRIPTION JOB RECEIVED"
+  );
 
   try {
     const testimonial = await prisma.testimonial.findUnique({
@@ -70,6 +76,11 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
         removeOnComplete: 100,
         removeOnFail: 100,
       }
+    );
+
+    logger.info(
+      { testimonialId },
+      "AI JOB QUEUED"
     );
 
     await job.updateProgress(100);

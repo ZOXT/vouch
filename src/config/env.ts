@@ -21,8 +21,10 @@ const envSchema = z.object({
 
   REDIS_URL : z.string(),
 
+  AI_MODEL: z.string().optional(),
   GROQ_API_KEY: z.string(),
-  GROQ_MODEL: z.string()
+  GROQ_MODEL: z.string(),
+  GROQ_WHISPER_MODEL: z.string().default("whisper-large-v3"),
 });
 
 export const env = envSchema.parse(process.env);
