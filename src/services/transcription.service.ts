@@ -5,6 +5,16 @@ import { generateDownloadPresignedUrl } from "./s3.service";
 
 const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 
+export interface TranscriptionResult {
+  transcript: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    latencyMs: number;
+  };
+}
+
 export class TranscriptionError extends Error {
   constructor(message: string) {
     super(message);
@@ -12,7 +22,11 @@ export class TranscriptionError extends Error {
   }
 }
 
-export const transcribeAudio = async (audioKey: string): Promise<string> => {
+export const transcribeAudio = async (
+  audioKey: string
+): Promise<TranscriptionResult> => {
+  const startedAt = Date.now();
+
   try {
     const audioUrl = await generateDownloadPresignedUrl(audioKey);
 
@@ -40,6 +54,16 @@ export const transcribeAudio = async (audioKey: string): Promise<string> => {
       );
     }
 
+    const usage = (
+      transcription as {
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+        };
+      }
+    ).usage;
+
     logger.info(
       {
         audioKey,
@@ -48,8 +72,15 @@ export const transcribeAudio = async (audioKey: string): Promise<string> => {
       "Transcription completed"
     );
 
-    return transcript;
-
+    return {
+      transcript,
+      usage: {
+        promptTokens: usage?.prompt_tokens ?? 0,
+        completionTokens: usage?.completion_tokens ?? 0,
+        totalTokens: usage?.total_tokens ?? 0,
+        latencyMs: Date.now() - startedAt,
+      },
+    };
   } catch (err) {
     logger.error(
       { err },

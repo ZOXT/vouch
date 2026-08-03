@@ -43,13 +43,15 @@ const processAIJob = async (job: Job<AIJobData>) => {
       return;
     }
 
+    const processingStartedAt = testimonial.processing_started_at ?? new Date();
+
     await prisma.testimonial.update({
       where: {
         id: testimonialId,
       },
       data: {
         status: "ai_processing",
-        processing_started_at: new Date(),
+        processing_started_at: processingStartedAt,
       },
     });
 
@@ -59,25 +61,22 @@ const processAIJob = async (job: Job<AIJobData>) => {
 
     await job.updateProgress(25);
 
-    const sanitizedTranscript = maskPII(
-      testimonial.transcript
-    );
+    const sanitizedTranscript = maskPII(testimonial.transcript);
 
     await job.updateProgress(40);
 
-    const privacyRisk = calculateRiskScore(
-      piiResult.detected
-    );
+    const privacyRisk = calculateRiskScore(piiResult.detected);
 
     await job.updateProgress(55);
 
-    const analysis = await analyzeTranscript(
-      sanitizedTranscript
-    );
+    const analysis = await analyzeTranscript(sanitizedTranscript);
 
     await job.updateProgress(80);
 
     const completedAt = new Date();
+    const totalProcessingMs = processingStartedAt.getTime()
+      ? completedAt.getTime() - processingStartedAt.getTime()
+      : null;
 
     await prisma.testimonial.update({
       where: {
@@ -87,6 +86,7 @@ const processAIJob = async (job: Job<AIJobData>) => {
         transcript_redacted: sanitizedTranscript,
         pii_detected: piiResult.hasPII,
         pii_risk_score: privacyRisk.score,
+        risk_level: privacyRisk.level,
         industry: analysis.industry,
         sentiment: analysis.sentiment,
         summary: analysis.summary,
@@ -97,12 +97,16 @@ const processAIJob = async (job: Job<AIJobData>) => {
         pain_points: analysis.painPoints,
         outcomes: analysis.outcomes,
         objections: analysis.objections,
+        metadata: {
+          piiTypes: piiResult.detected,
+          riskLevel: privacyRisk.level,
+          analysisModel: env.AI_MODEL ?? env.GROQ_MODEL,
+          transcriptionModel: env.GROQ_WHISPER_MODEL,
+        },
         status: "completed",
         processed_at: completedAt,
         processing_completed_at: completedAt,
-        total_processing_ms: testimonial.processing_started_at?.getTime()
-          ? completedAt.getTime() - testimonial.processing_started_at.getTime()
-          : null,
+        total_processing_ms: totalProcessingMs,
       },
     });
 

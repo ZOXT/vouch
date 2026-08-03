@@ -46,22 +46,41 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
       return;
     }
 
+    const processingStartedAt = testimonial.processing_started_at ?? new Date();
+
     await prisma.testimonial.update({
       where: { id: testimonialId },
-      data: { status: "transcribing" },
+      data: {
+        status: "transcribing",
+        processing_started_at: processingStartedAt,
+      },
     });
 
     await job.updateProgress(10);
 
-    const transcript = await transcribeAudio(testimonial.audio_key);
+    const transcription = await transcribeAudio(testimonial.audio_key);
 
     await job.updateProgress(90);
 
     await prisma.testimonial.update({
       where: { id: testimonialId },
       data: {
-        transcript,
+        transcript: transcription.transcript,
         status: "ai_processing",
+      },
+    });
+
+    await prisma.aIUsage.create({
+      data: {
+        testimonial_id: testimonialId,
+        provider: "groq",
+        model: env.GROQ_WHISPER_MODEL,
+        operation: "transcription",
+        prompt_tokens: transcription.usage.promptTokens,
+        completion_tokens: transcription.usage.completionTokens,
+        total_tokens: transcription.usage.totalTokens,
+        latency_ms: transcription.usage.latencyMs,
+        success: true,
       },
     });
 
@@ -85,12 +104,12 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
 
     await job.updateProgress(100);
 
-    const wordCount = transcript.split(/\s+/).length;
+    const wordCount = transcription.transcript.split(/\s+/).length;
 
     logger.info(
       {
         testimonialId,
-        characters: transcript.length,
+        characters: transcription.transcript.length,
         words: wordCount,
       },
       "Transcription completed, AI analysis queued"
@@ -102,6 +121,24 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
       { testimonialId, error: errorMessage },
       "Transcription failed"
     );
+
+    try {
+      await prisma.aIUsage.create({
+        data: {
+          testimonial_id: testimonialId,
+          provider: "groq",
+          model: env.GROQ_WHISPER_MODEL,
+          operation: "transcription",
+          success: false,
+          error_message: errorMessage,
+        },
+      });
+    } catch (dbError) {
+      logger.error(
+        { testimonialId, dbError },
+        "Failed to record transcription usage"
+      );
+    }
 
     await prisma.testimonial.update({
       where: { id: testimonialId },

@@ -109,7 +109,7 @@ model Testimonial {
   pii_detected            Boolean                     @default(false)
   pii_risk_score          Float?
   risk_level              RiskLevel?
-  risk_score              Float?
+  risk_score              Float? // Reserved for future aggregate risk scoring; left unset by the current AI pipeline.
   failure_reason          String?
   processing_started_at   DateTime?
   processing_completed_at DateTime?

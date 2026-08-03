@@ -103,10 +103,12 @@ const processMediaJob = async (job: Job<MediaJobData>) => {
         thumbnail_key: thumbnailKey,
         duration_seconds: mediaInfo.duration,
         file_size_bytes: BigInt(mediaInfo.fileSizeBytes),
+        mime_type: testimonial.mime_type ?? "video/mp4",
         metadata: {
           codec: mediaInfo.codec,
           width: mediaInfo.width,
           height: mediaInfo.height,
+          fileSizeBytes: mediaInfo.fileSizeBytes,
         },
       },
     });

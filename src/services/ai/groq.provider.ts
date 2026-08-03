@@ -42,7 +42,7 @@ Rules:
 
 - summary should be concise (1-2 sentences)
 - industry should be one category only
-- sentiment must be positive, neutral or negative
+- sentiment must be positive, neutral, negative, or mixed
 - keywords should contain 3-8 important terms
 - painPoints should contain customer problems mentioned
 - outcomes should contain the value or business outcomes described

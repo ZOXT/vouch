@@ -1,5 +1,5 @@
-import {prisma} from "../config/prisma";
-import {env} from "../config/env"
+import { prisma } from "../config/prisma";
+import { env } from "../config/env";
 import { mediaQueue } from "../queues/media.queue";
 import { markRequestCompleted } from "./testimonial-request.service";
 import { logger } from "../config/logger";
@@ -10,7 +10,8 @@ import "dotenv/config";
 export const confirmTestimonialUpload = async (
   token: string,
   key: string,
-  duration?: number
+  duration?: number,
+  mimeType?: string
 ) => {
   const request = await markRequestCompleted(token);
 
@@ -23,6 +24,7 @@ export const confirmTestimonialUpload = async (
       video_key: key,
       status: "pending",
       duration_seconds: duration,
+      mime_type: mimeType,
     }
   });
 
