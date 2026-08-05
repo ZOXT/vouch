@@ -41,6 +41,22 @@ enum RequestStatus {
   expired
 }
 
+enum FailedJobStatus {
+  pending
+  retrying
+  resolved
+  ignored
+}
+
+enum FailureCategory {
+  groq_timeout
+  groq_rate_limit
+  invalid_response
+  database_error
+  media_processing
+  unknown
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String
@@ -165,4 +181,25 @@ model AIUsage {
   @@index([provider])
   @@index([model])
   @@index([operation])
+}
+
+model FailedJob {
+  id             String            @id @default(uuid())
+  queue_name     String
+  job_id         String?
+  job_name       String?
+  testimonial_id String?
+  error_message  String
+  error_stack    String?
+  category       FailureCategory   @default(unknown)
+  attempts       Int
+  payload        Json
+  status         FailedJobStatus   @default(pending)
+  resolved_at    DateTime?
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+
+  @@index([status])
+  @@index([queue_name])
+  @@index([testimonial_id])
 }

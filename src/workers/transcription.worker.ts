@@ -3,6 +3,7 @@ import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { logger } from "../config/logger";
 import { aiQueue } from "../queues/ai.queue";
+import { createFailedJob } from "../services/dlq.service";
 import type { TranscriptionJobData } from "../queues/transcription.queue";
 import { transcribeAudio } from "../services/transcription.service";
 
@@ -174,16 +175,33 @@ transcriptionWorker.on("completed", (job) => {
   logger.info({ jobId: job.id, jobName: job.name }, "Job completed");
 });
 
-transcriptionWorker.on("failed", (job, error) => {
+transcriptionWorker.on("failed", async (job, error) => {
+  const maxAttempts = job?.opts.attempts ?? 1;
+  const attemptsMade = job?.attemptsMade ?? 0;
+
   logger.error(
     {
       jobId: job?.id,
       jobName: job?.name,
       error: error.message,
-      attemptsMade: job?.attemptsMade,
+      attemptsMade,
+      willRetry: attemptsMade < maxAttempts,
     },
     "Job failed"
   );
+
+  if (job && attemptsMade >= maxAttempts) {
+    await createFailedJob({
+      queueName: "transcription",
+      jobId: job.id,
+      jobName: job.name,
+      testimonialId: job.data.testimonialId,
+      error: error.message,
+      stack: error.stack,
+      attempts: attemptsMade,
+      payload: job.data,
+    });
+  }
 });
 
 transcriptionWorker.on("error", (error) => {

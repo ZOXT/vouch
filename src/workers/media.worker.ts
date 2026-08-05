@@ -4,6 +4,7 @@ import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { logger } from "../config/logger";
 import { transcriptionQueue } from "../queues/transcription.queue";
+import { createFailedJob } from "../services/dlq.service";
 import path from "path";
 import {
   createTempDirectory,
@@ -203,8 +204,32 @@ mediaWorker.on("completed", (job) => {
   logger.info({ jobId: job.id }, "Media job completed");
 });
 
-mediaWorker.on("failed", (job, err) => {
-  logger.error({ jobId: job?.id, err: err.message }, "Media job failed");
+mediaWorker.on("failed", async (job, err) => {
+  const maxAttempts = job?.opts.attempts ?? 1;
+  const attemptsMade = job?.attemptsMade ?? 0;
+
+  logger.error(
+    {
+      jobId: job?.id,
+      error: err.message,
+      attemptsMade,
+      willRetry: attemptsMade < maxAttempts,
+    },
+    "Media job failed"
+  );
+
+  if (job && attemptsMade >= maxAttempts) {
+    await createFailedJob({
+      queueName: "media",
+      jobId: job.id,
+      jobName: job.name,
+      testimonialId: job.data.testimonialId,
+      error: err.message,
+      stack: err.stack,
+      attempts: attemptsMade,
+      payload: job.data,
+    });
+  }
 });
 
 const gracefulShutdown = async () => {

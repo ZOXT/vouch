@@ -8,10 +8,11 @@
     "worker": "tsx --env-file=.env src/workers/transcription.worker.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-   "worker:media": "tsx --env-file=.env src/workers/media.worker.ts",
-"worker:transcription": "tsx --env-file=.env src/workers/transcription.worker.ts",
-"worker:ai": "tsx --env-file=.env src/workers/ai.worker.ts"
-    
+    "worker:media": "tsx --env-file=.env src/workers/media.worker.ts",
+    "worker:transcription": "tsx --env-file=.env src/workers/transcription.worker.ts",
+    "worker:ai": "tsx --env-file=.env src/workers/ai.worker.ts",
+    "dlq:retry": "tsx --env-file=.env src/scripts/dlq-retry.ts",
+    "dlq:inspect": "tsx --env-file=.env src/scripts/dlq-inspect.ts"
   },
   "keywords": [],
   "author": "",
