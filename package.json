@@ -13,6 +13,7 @@
     "worker:ai": "tsx --env-file=.env src/workers/ai.worker.ts",
     "dlq:retry": "tsx --env-file=.env src/scripts/dlq-retry.ts",
     "dlq:inspect": "tsx --env-file=.env src/scripts/dlq-inspect.ts"
+    
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "express": "^5.2.1",
     "fluent-ffmpeg": "^2.1.3",
     "groq-sdk": "^1.4.0",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "nanoid": "^6.0.0",
     "pg": "^8.21.0",
