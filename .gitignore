@@ -3,3 +3,7 @@ dist/
 .env
 public/temp/*
 /src/generated/prisma
+.vscode/
+coverage/
+__pycache__/
+*.pyc

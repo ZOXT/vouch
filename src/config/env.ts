@@ -1,4 +1,3 @@
-// config/env.ts
 import { z } from "zod";
 
 const envSchema = z.object({
@@ -9,7 +8,7 @@ const envSchema = z.object({
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
-  
+
   // Only needed in development — production uses IAM role
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -25,6 +24,10 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string(),
   GROQ_MODEL: z.string(),
   GROQ_WHISPER_MODEL: z.string().default("whisper-large-v3"),
+
+ EMBEDDING_SERVICE_URL: z.string(),
+
+
 });
 
 export const env = envSchema.parse(process.env);

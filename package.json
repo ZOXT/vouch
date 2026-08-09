@@ -11,9 +11,10 @@
     "worker:media": "tsx --env-file=.env src/workers/media.worker.ts",
     "worker:transcription": "tsx --env-file=.env src/workers/transcription.worker.ts",
     "worker:ai": "tsx --env-file=.env src/workers/ai.worker.ts",
+    "worker:embedding": "tsx --env-file=.env src/workers/embedding.worker.ts",
     "dlq:retry": "tsx --env-file=.env src/scripts/dlq-retry.ts",
-    "dlq:inspect": "tsx --env-file=.env src/scripts/dlq-inspect.ts"
-    
+    "dlq:inspect": "tsx --env-file=.env src/scripts/dlq-inspect.ts",
+    "workers": "concurrently \"npm run worker:media\" \"npm run worker:transcription\" \"npm run worker:ai\" \"npm run worker:embedding\""
   },
   "keywords": [],
   "author": "",
@@ -48,6 +49,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
+    "concurrently": "^10.0.4",
     "dotenv": "^17.4.2",
     "eslint": "^10.4.1",
     "nodemon": "^3.1.14",

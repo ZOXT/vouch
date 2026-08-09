@@ -1,11 +1,10 @@
-// src/workers/ai.worker.ts
-
 import "dotenv/config";
 import { Worker, Job } from "bullmq";
 import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { logger } from "../config/logger";
 import { createFailedJob } from "../services/dlq.service";
+import { embeddingQueue } from "../queues/embedding.queue";
 import {
   detectPII,
   maskPII,
@@ -74,15 +73,30 @@ const processAIJob = async (job: Job<AIJobData>) => {
 
     await job.updateProgress(80);
 
+    // Queue embedding job — separate from AI analysis
+    await embeddingQueue.add(
+      "embed",
+      { testimonialId },
+      {
+        jobId: `embedding-${testimonialId}`,
+        attempts: 3,
+        backoff: { type: "exponential", delay: 2000 },
+        removeOnComplete: 100,
+        removeOnFail: 100,
+      }
+    );
+
+    logger.info({ testimonialId }, "Embedding job queued");
+
+    await job.updateProgress(90);
+
     const completedAt = new Date();
     const totalProcessingMs = processingStartedAt.getTime()
       ? completedAt.getTime() - processingStartedAt.getTime()
       : null;
 
     await prisma.testimonial.update({
-      where: {
-        id: testimonialId,
-      },
+      where: { id: testimonialId },
       data: {
         transcript_redacted: sanitizedTranscript,
         pii_detected: piiResult.hasPII,

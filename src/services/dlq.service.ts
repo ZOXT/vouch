@@ -12,11 +12,45 @@ type FailureCategory =
 const categorizeError = (message: string): FailureCategory => {
   const normalized = message.toLowerCase();
 
-  if (normalized.includes("timeout")) return "groq_timeout";
-  if (normalized.includes("rate limit") || normalized.includes("429")) return "groq_rate_limit";
-  if (normalized.includes("invalid") || normalized.includes("json")) return "invalid_response";
-  if (normalized.includes("database") || normalized.includes("prisma")) return "database_error";
-  if (normalized.includes("ffmpeg") || normalized.includes("media")) return "media_processing";
+  if (
+    normalized.includes("prisma") ||
+    normalized.includes("database") ||
+    normalized.includes("execute raw") ||
+    normalized.includes("22p02") ||
+    normalized.includes("vector") ||
+    normalized.includes("postgres")
+  ) {
+    return "database_error";
+  }
+
+  // Groq / AI API errors
+  if (normalized.includes("timeout")) {
+    return "groq_timeout";
+  }
+
+  if (
+    normalized.includes("rate limit") ||
+    normalized.includes("429")
+  ) {
+    return "groq_rate_limit";
+  }
+
+  // AI response formatting errors
+  if (
+    normalized.includes("invalid json") ||
+    normalized.includes("unexpected token") ||
+    normalized.includes("parse")
+  ) {
+    return "invalid_response";
+  }
+
+  if (
+    normalized.includes("ffmpeg") ||
+    normalized.includes("media")
+  ) {
+    return "media_processing";
+  }
+
   return "unknown";
 };
 
