@@ -8,6 +8,7 @@ const envSchema = z.object({
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
+  DUMMY_PASSWORD_HASH: z.string(),
 
   // Only needed in development — production uses IAM role
   AWS_ACCESS_KEY_ID: z.string().optional(),
