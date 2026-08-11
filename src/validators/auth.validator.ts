@@ -36,6 +36,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const verifyOTPValidator = z.object({
+ userId:z.string().uuid(),
+ otp:z.string().length(6)
+});
+
 // TypeScript types
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
