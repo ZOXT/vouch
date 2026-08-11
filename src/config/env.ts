@@ -27,6 +27,9 @@ const envSchema = z.object({
 
  EMBEDDING_SERVICE_URL: z.string(),
 
+ RESEND_API_KEY: z.string(),
+ FROM_EMAIL: z.string()
+
 
 });
 
