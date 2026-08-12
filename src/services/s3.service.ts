@@ -1,5 +1,5 @@
 import { env } from "../config/env";
-import { PutObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { nanoid } from "nanoid";
 import { s3Client } from "../config/s3";
@@ -142,5 +142,27 @@ export const generateDownloadPresignedUrl = async (
     logger.error({ key, err }, "Failed to generate download URL");
 
     throw new Error("Failed to generate download URL");
+  }
+};
+
+export const verifyS3ObjectExists = async (
+  key: string
+): Promise<boolean> => {
+  try {
+    await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key
+      })
+    );
+
+    return true;
+  } catch (err) {
+    logger.warn(
+      { key, err },
+      "S3 object does not exist or could not be accessed"
+    );
+
+    return false;
   }
 };
