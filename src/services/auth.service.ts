@@ -6,7 +6,7 @@ import { env } from "../config/env";
 import { ApiError } from "../utils/ApiError";
 import { slugify } from "../utils/slugify";
 import { nanoid } from "nanoid";
-import { createAndSendOTP, verifyOTP } from "./otp.service";
+import { createAndSendOTP, verifyOTP, resendOTP} from "./otp.service";
 import { redis } from "../config/redis";
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -16,6 +16,46 @@ const LOGIN_IP_LOCK_SECONDS = 60 * 60;
 
 const normalizeEmail = (email: string): string => {
   return email.toLowerCase().trim();
+};
+
+export const resendVerificationOTP = async (
+  userId: string
+) => {
+
+  const user = await prisma.user.findUnique({
+    where:{
+      id:userId
+    }
+  });
+
+
+  if(!user){
+    throw new ApiError(
+      404,
+      "User not found"
+    );
+  }
+
+
+  if(user.is_verified){
+    throw new ApiError(
+      400,
+      "Email already verified"
+    );
+  }
+
+
+  await resendOTP(
+    user.id,
+    user.email,
+    user.name
+  );
+
+
+  return {
+    message:"Verification code sent"
+  };
+
 };
 
 const checkLoginLock = async (email: string, ip: string) => {

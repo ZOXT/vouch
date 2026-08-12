@@ -6,6 +6,20 @@ import { ApiError } from "../utils/ApiError";
 const OTP_EXPIRY = 180;
 const OTP_MAX_ATTEMPTS = 5;
 
+export const resendOTP = async (
+  userId: string,
+  email: string,
+  name: string
+) => {
+
+  await createAndSendOTP(
+    userId,
+    email,
+    name
+  );
+
+};
+
 const generateOTP = (): string => {
   return crypto.randomInt(100000, 999999).toString();
 };

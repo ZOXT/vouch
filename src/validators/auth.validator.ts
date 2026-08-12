@@ -41,6 +41,10 @@ export const verifyOTPValidator = z.object({
  otp:z.string().length(6)
 });
 
+export const resendOTPValidator = z.object({
+  userId:z.string().uuid()
+});
+
 // TypeScript types
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
