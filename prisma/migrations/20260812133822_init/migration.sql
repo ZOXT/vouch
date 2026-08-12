@@ -1,12 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "citext";
-
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "vector";
-
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('freelancer', 'agency');
 
@@ -21,6 +12,12 @@ CREATE TYPE "Sentiment" AS ENUM ('positive', 'neutral', 'negative', 'mixed');
 
 -- CreateEnum
 CREATE TYPE "RequestStatus" AS ENUM ('pending', 'completed', 'expired');
+
+-- CreateEnum
+CREATE TYPE "FailedJobStatus" AS ENUM ('pending', 'retrying', 'resolved', 'ignored');
+
+-- CreateEnum
+CREATE TYPE "FailureCategory" AS ENUM ('groq_timeout', 'groq_rate_limit', 'invalid_response', 'database_error', 'media_processing', 'unknown');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -48,6 +45,7 @@ CREATE TABLE "TestimonialRequest" (
     "client_name" TEXT NOT NULL,
     "client_email" TEXT,
     "token" TEXT NOT NULL,
+    "upload_key" TEXT,
     "status" "RequestStatus" NOT NULL DEFAULT 'pending',
     "expires_at" TIMESTAMP(3) NOT NULL,
     "completed_at" TIMESTAMP(3),
@@ -91,7 +89,15 @@ CREATE TABLE "Testimonial" (
     "deleted_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "embedding" vector(768),
+    "embedding" vector,
+    "confidence_score" DOUBLE PRECISION,
+    "customer_type" TEXT,
+    "keywords" TEXT[],
+    "language" TEXT,
+    "summary" TEXT,
+    "processing_completed_at" TIMESTAMP(3),
+    "processing_started_at" TIMESTAMP(3),
+    "total_processing_ms" INTEGER,
 
     CONSTRAINT "Testimonial_pkey" PRIMARY KEY ("id")
 );
@@ -120,8 +126,31 @@ CREATE TABLE "AIUsage" (
     "total_tokens" INTEGER,
     "latency_ms" INTEGER,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "error_message" TEXT,
+    "operation" TEXT NOT NULL DEFAULT 'analysis',
+    "success" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "AIUsage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "FailedJob" (
+    "id" TEXT NOT NULL,
+    "queue_name" TEXT NOT NULL,
+    "job_id" TEXT,
+    "testimonial_id" TEXT,
+    "error_message" TEXT NOT NULL,
+    "error_stack" TEXT,
+    "category" "FailureCategory" NOT NULL DEFAULT 'unknown',
+    "attempts" INTEGER NOT NULL,
+    "payload" JSONB NOT NULL,
+    "status" "FailedJobStatus" NOT NULL DEFAULT 'pending',
+    "resolved_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "job_name" TEXT,
+
+    CONSTRAINT "FailedJob_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -160,18 +189,35 @@ CREATE UNIQUE INDEX "Subscription_user_id_key" ON "Subscription"("user_id");
 -- CreateIndex
 CREATE INDEX "AIUsage_testimonial_id_idx" ON "AIUsage"("testimonial_id");
 
+-- CreateIndex
+CREATE INDEX "AIUsage_provider_idx" ON "AIUsage"("provider");
+
+-- CreateIndex
+CREATE INDEX "AIUsage_model_idx" ON "AIUsage"("model");
+
+-- CreateIndex
+CREATE INDEX "AIUsage_operation_idx" ON "AIUsage"("operation");
+
+-- CreateIndex
+CREATE INDEX "FailedJob_status_idx" ON "FailedJob"("status");
+
+-- CreateIndex
+CREATE INDEX "FailedJob_queue_name_idx" ON "FailedJob"("queue_name");
+
+-- CreateIndex
+CREATE INDEX "FailedJob_testimonial_id_idx" ON "FailedJob"("testimonial_id");
+
 -- AddForeignKey
 ALTER TABLE "TestimonialRequest" ADD CONSTRAINT "TestimonialRequest_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Testimonial" ADD CONSTRAINT "Testimonial_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Testimonial" ADD CONSTRAINT "Testimonial_request_id_fkey" FOREIGN KEY ("request_id") REFERENCES "TestimonialRequest"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Testimonial" ADD CONSTRAINT "Testimonial_request_id_fkey" FOREIGN KEY ("request_id") REFERENCES "TestimonialRequest"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Testimonial" ADD CONSTRAINT "Testimonial_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AIUsage" ADD CONSTRAINT "AIUsage_testimonial_id_fkey" FOREIGN KEY ("testimonial_id") REFERENCES "Testimonial"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
