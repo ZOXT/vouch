@@ -1,7 +1,12 @@
 import { env } from "../config/env";
-import { PutObjectCommand, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { nanoid } from "nanoid";
+import { prisma } from "../config/prisma";
 import { s3Client } from "../config/s3";
 import { ApiError } from "../utils/ApiError";
 import { getTestimonialRequestByToken } from "./testimonial-request.service";
@@ -9,7 +14,6 @@ import { logger } from "../config/logger";
 import fs, { write, WriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
-
 
 export class S3UploadError extends Error {
   constructor(message: string) {
@@ -35,7 +39,7 @@ export const generatePresignedUploadUrl = async (
   if (!env.ALLOWED_VIDEO_TYPES.includes(fileType)) {
     throw new ApiError(
       400,
-      `File type "${fileType}" not supported. Allowed: ${env.ALLOWED_VIDEO_TYPES.join(", ")}`
+      `File type "${fileType}" not supported. Allowed: ${env.ALLOWED_VIDEO_TYPES.join(", ")}`,
     );
   }
 
@@ -55,10 +59,23 @@ export const generatePresignedUploadUrl = async (
       {
         expiresIn: env.PRESIGNED_URL_EXPIRY,
         signableHeaders: new Set(["content-type"]),
-      }
+      },
     );
 
-    logger.info({ key, bucket: env.AWS_BUCKET_NAME }, "Generated presigned upload URL");
+    await prisma.testimonialRequest.update({
+      where: {
+        id: request.id,
+      },
+      data: {
+        upload_key: key,
+        presigned_url_generated_at: new Date(),
+      },
+    });
+
+    logger.info(
+      { key, bucket: env.AWS_BUCKET_NAME },
+      "Generated presigned upload URL",
+    );
 
     return { url, key, maxFileSizeBytes };
   } catch (err) {
@@ -69,7 +86,7 @@ export const generatePresignedUploadUrl = async (
 
 export const downloadFromS3 = async (
   key: string,
-  destinationPath: string
+  destinationPath: string,
 ): Promise<void> => {
   try {
     const command = new GetObjectCommand({
@@ -99,7 +116,7 @@ export const downloadFromS3 = async (
 export const uploadFile = async (
   filePath: string,
   key: string,
-  contentType: string
+  contentType: string,
 ): Promise<string> => {
   try {
     const stats = await fs.promises.stat(filePath);
@@ -125,7 +142,7 @@ export const uploadFile = async (
 };
 
 export const generateDownloadPresignedUrl = async (
-  key: string
+  key: string,
 ): Promise<string> => {
   try {
     return await getSignedUrl(
@@ -136,7 +153,7 @@ export const generateDownloadPresignedUrl = async (
       }),
       {
         expiresIn: 900,
-      }
+      },
     );
   } catch (err) {
     logger.error({ key, err }, "Failed to generate download URL");
@@ -145,9 +162,7 @@ export const generateDownloadPresignedUrl = async (
   }
 };
 
-export const verifyS3ObjectExists = async (
-  key: string
-): Promise<boolean> => {
+export const verifyS3ObjectExists = async (key: string): Promise<boolean> => {
   try {
     await s3Client.send(
       new HeadObjectCommand({

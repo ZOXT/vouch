@@ -5,7 +5,150 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  extensions = [pgvector(map: "vector"), citext]
+  extensions = [citext, uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  name                String
+  email               String               @unique @db.Citext
+  password_hash       String
+  role                Role
+  company_name        String?
+  avatar_url          String?
+  slug                String               @unique
+  is_verified         Boolean              @default(false)
+  verified_at         DateTime?
+  deleted_at          DateTime?
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
+  subscription        Subscription?
+  testimonials        Testimonial[]
+  testimonialRequests TestimonialRequest[]
+}
+
+model TestimonialRequest {
+  id                         String        @id @default(uuid())
+  user_id                    String
+  client_name                String
+  client_email               String?
+  token                      String        @unique
+  upload_key                 String?
+  status                     RequestStatus @default(pending)
+  expires_at                 DateTime
+  completed_at               DateTime?
+  presigned_url_generated_at DateTime?
+  created_at                 DateTime      @default(now())
+  updated_at                 DateTime      @updatedAt
+  testimonial                Testimonial?
+  user                       User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([user_id])
+}
+
+model Testimonial {
+  id                      String                 @id @default(uuid())
+  user_id                 String
+  request_id              String?                @unique
+  client_name             String
+  client_email            String?
+  video_key               String?
+  audio_key               String?
+  thumbnail_key           String?
+  mime_type               String?
+  file_size_bytes         BigInt?
+  duration_seconds        Int?
+  transcript              String?
+  transcript_redacted     String?
+  industry                String?
+  sentiment               Sentiment?
+  pain_points             String[]
+  outcomes                String[]
+  objections              String[]
+  metadata                Json?
+  pii_detected            Boolean                @default(false)
+  pii_risk_score          Float?
+  risk_level              RiskLevel?
+  risk_score              Float?
+  failure_reason          String?
+  status                  TestimonialStatus      @default(pending)
+  processed_at            DateTime?
+  is_published            Boolean                @default(false)
+  published_at            DateTime?
+  deleted_at              DateTime?
+  created_at              DateTime               @default(now())
+  updated_at              DateTime               @updatedAt
+  embedding               Unsupported("vector")?
+  confidence_score        Float?
+  customer_type           String?
+  keywords                String[]
+  language                String?
+  summary                 String?
+  processing_completed_at DateTime?
+  processing_started_at   DateTime?
+  total_processing_ms     Int?
+  ai_usage                AIUsage[]
+  request                 TestimonialRequest?    @relation(fields: [request_id], references: [id])
+  user                    User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([status])
+  @@index([industry])
+  @@index([user_id, status])
+}
+
+model Subscription {
+  id                     String   @id @default(uuid())
+  user_id                String   @unique
+  stripe_customer_id     String
+  stripe_subscription_id String
+  plan                   String
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+  user                   User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model AIUsage {
+  id                String      @id @default(uuid())
+  testimonial_id    String
+  provider          String
+  model             String
+  prompt_tokens     Int?
+  completion_tokens Int?
+  total_tokens      Int?
+  latency_ms        Int?
+  created_at        DateTime    @default(now())
+  error_message     String?
+  operation         String      @default("analysis")
+  success           Boolean     @default(true)
+  testimonial       Testimonial @relation(fields: [testimonial_id], references: [id], onDelete: Cascade)
+
+  @@index([testimonial_id])
+  @@index([provider])
+  @@index([model])
+  @@index([operation])
+}
+
+model FailedJob {
+  id             String          @id @default(uuid())
+  queue_name     String
+  job_id         String?
+  testimonial_id String?
+  error_message  String
+  error_stack    String?
+  category       FailureCategory @default(unknown)
+  attempts       Int
+  payload        Json
+  status         FailedJobStatus @default(pending)
+  resolved_at    DateTime?
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+  job_name       String?
+
+  @@index([status])
+  @@index([queue_name])
+  @@index([testimonial_id])
 }
 
 enum Role {
@@ -55,151 +198,4 @@ enum FailureCategory {
   database_error
   media_processing
   unknown
-}
-
-model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique @db.Citext
-  password_hash String
-  role          Role
-  company_name  String?
-  avatar_url    String?
-  slug          String    @unique
-  is_verified   Boolean   @default(false)
-  verified_at   DateTime?
-  deleted_at    DateTime?
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-
-  testimonials        Testimonial[]
-  testimonialRequests TestimonialRequest[]
-  subscription        Subscription?
-}
-
-model TestimonialRequest {
-  id                         String        @id @default(uuid())
-  user_id                    String
-  client_name                String
-  client_email               String?
-  token                      String        @unique
-  status                     RequestStatus @default(pending)
-  expires_at                 DateTime
-  completed_at               DateTime?
-  presigned_url_generated_at DateTime?
-  created_at                 DateTime      @default(now())
-  updated_at                 DateTime      @updatedAt
-
-  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  testimonial Testimonial?
-
-  @@index([token])
-  @@index([user_id])
-}
-
-model Testimonial {
-  id                      String                      @id @default(uuid())
-  user_id                 String
-  request_id              String?                     @unique
-  client_name             String
-  client_email            String?
-  video_key               String?
-  audio_key               String?
-  thumbnail_key           String?
-  mime_type               String?
-  file_size_bytes         BigInt?
-  duration_seconds        Int?
-  transcript              String?
-  transcript_redacted     String?
-  industry                String?
-  sentiment               Sentiment?
-  summary                 String?
-  keywords                String[]
-  customer_type           String?
-  language                String?
-  confidence_score        Float?
-  pain_points             String[]
-  outcomes                String[]
-  objections              String[]
-  metadata                Json?
-  pii_detected            Boolean                     @default(false)
-  pii_risk_score          Float?
-  risk_level              RiskLevel?
-  risk_score              Float? // Reserved for future aggregate risk scoring; left unset by the current AI pipeline.
-  failure_reason          String?
-  processing_started_at   DateTime?
-  processing_completed_at DateTime?
-  total_processing_ms     Int?
-  ai_usage                AIUsage[]
-  status                  TestimonialStatus           @default(pending)
-  processed_at            DateTime?
-  is_published            Boolean                     @default(false)
-  published_at            DateTime?
-  deleted_at              DateTime?
-  created_at              DateTime                    @default(now())
-  updated_at              DateTime                    @updatedAt
-  embedding               Unsupported("vector(768)")?
-
-  user    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  request TestimonialRequest? @relation(fields: [request_id], references: [id])
-
-  @@index([user_id])
-  @@index([status])
-  @@index([industry])
-  @@index([user_id, status])
-}
-
-model Subscription {
-  id                     String   @id @default(uuid())
-  user_id                String   @unique
-  stripe_customer_id     String
-  stripe_subscription_id String
-  plan                   String
-  created_at             DateTime @default(now())
-  updated_at             DateTime @updatedAt
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
-model AIUsage {
-  id                String   @id @default(uuid())
-  testimonial_id    String
-  provider          String
-  model             String
-  operation         String   @default("analysis")
-  prompt_tokens     Int?
-  completion_tokens Int?
-  total_tokens      Int?
-  latency_ms        Int?
-  success           Boolean  @default(true)
-  error_message     String?
-  created_at        DateTime @default(now())
-
-  testimonial Testimonial @relation(fields: [testimonial_id], references: [id], onDelete: Cascade)
-
-  @@index([testimonial_id])
-  @@index([provider])
-  @@index([model])
-  @@index([operation])
-}
-
-model FailedJob {
-  id             String            @id @default(uuid())
-  queue_name     String
-  job_id         String?
-  job_name       String?
-  testimonial_id String?
-  error_message  String
-  error_stack    String?
-  category       FailureCategory   @default(unknown)
-  attempts       Int
-  payload        Json
-  status         FailedJobStatus   @default(pending)
-  resolved_at    DateTime?
-  created_at     DateTime          @default(now())
-  updated_at     DateTime          @updatedAt
-
-  @@index([status])
-  @@index([queue_name])
-  @@index([testimonial_id])
 }
