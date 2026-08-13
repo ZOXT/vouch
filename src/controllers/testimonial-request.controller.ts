@@ -23,5 +23,11 @@ if (!token || Array.isArray(token)) {
 }
 
 const request = await getTestimonialRequestByToken(token);
+const publicRequest = {
+    clientName: request.client_name,
+    status: request.status,
+    expiresAt: request.expires_at,
+  };
+  
   res.status(200).json(new ApiResponse(200, request, "Request found"));
 });
