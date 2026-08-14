@@ -1,4 +1,4 @@
-import { createTestimonialRequest, getTestimonialRequestByToken } from "../services/testimonial-request.service"; 
+import { createTestimonialRequest, getTestimonialRequestByToken} from "../services/testimonial-request.service"; 
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
@@ -29,5 +29,5 @@ const publicRequest = {
     expiresAt: request.expires_at,
   };
   
-  res.status(200).json(new ApiResponse(200, request, "Request found"));
+  res.status(200).json(new ApiResponse(200, publicRequest, "Request found"));
 });

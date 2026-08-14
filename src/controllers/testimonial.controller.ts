@@ -1,7 +1,8 @@
 import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { generatePresignedUploadUrl } from "../services/s3.service";
-import {confirmTestimonialUpload} from "../services/testimonial.service";
+import {confirmTestimonialUpload, publishTestimonial} from "../services/testimonial.service";
 
 
 export const getUploadUrl = asyncHandler(async(req,res) =>{
@@ -14,7 +15,6 @@ export const getUploadUrl = asyncHandler(async(req,res) =>{
     )
 
 });
-
 export const confirmUpload = asyncHandler(async (req, res) => {
   const { token, key, duration } = req.body;
 
@@ -23,4 +23,22 @@ export const confirmUpload = asyncHandler(async (req, res) => {
   res.status(201).json(
     new ApiResponse(201, testimonial, "Testimonial submitted successfully")
   );
+});
+
+export const publish = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || Array.isArray(id)) {
+    throw new ApiError(400, "Invalid testimonial id");
+  }
+
+  const testimonial = await publishTestimonial(id, req.user!.id);
+
+  const publishResponse = {
+    id: testimonial.id,
+    isPublished: testimonial.is_published,
+    publishedAt: testimonial.published_at,
+  };
+
+  res.status(200).json(new ApiResponse(200, publishResponse, "Testimonial published"));
 });

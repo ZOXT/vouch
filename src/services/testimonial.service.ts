@@ -80,3 +80,22 @@ export const confirmTestimonialUpload = async (
   message: "Testimonial uploaded successfully and processing has started",
 }
 };
+
+export const publishTestimonial = async (testimonialId: string, userId: string) => {
+  const testimonial = await prisma.testimonial.findUnique({
+    where: { id: testimonialId },
+  });
+
+  if (!testimonial) {
+    throw new ApiError(404, "Testimonial not found");
+  }
+
+  if (testimonial.user_id !== userId) {
+    throw new ApiError(403, "You don't have access to this testimonial");
+  }
+
+  return prisma.testimonial.update({
+    where: { id: testimonialId },
+    data: { is_published: true, published_at: new Date() },
+  });
+};
