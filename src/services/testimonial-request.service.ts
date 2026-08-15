@@ -3,7 +3,15 @@ import { prisma } from "../config/prisma";
 import { Prisma, TestimonialRequest } from "@prisma/client";
 import { ApiError } from "../utils/ApiError";
 
-export const createTestimonialRequest = async ( userId: string, clientName: string, clientEmail?: string): Promise<{
+export const createTestimonialRequest = async ( 
+  userId: string,
+  clientName: string,
+  clientEmail?: string,
+  title?: string,
+  message?: string,
+  questions?: string[]
+
+): Promise<{
   request: TestimonialRequest;
   url: string;
 }> => {
@@ -15,9 +23,12 @@ export const createTestimonialRequest = async ( userId: string, clientName: stri
 
   const request = await prisma.testimonialRequest.create({
     data: {
-      user_id: userId,
+       user_id: userId,
       client_name: clientName,
       client_email: clientEmail,
+      title,
+      message,
+      questions,
       token,
       expires_at: expiresAt,
     },
@@ -34,7 +45,7 @@ export const createTestimonialRequest = async ( userId: string, clientName: stri
 
 export const getTestimonialRequestByToken = async (token: string) => {
   const request = await prisma.testimonialRequest.findUnique({
-    where: { token }
+    where: { token }, include: { user: { select: { avatar_url: true } } },
   });
 
   if (!request) {
