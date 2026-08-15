@@ -1,3 +1,7 @@
+-- CreateExtensions
+CREATE EXTENSION IF NOT EXISTS "citext";
+CREATE EXTENSION IF NOT EXISTS "vector";
+
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('freelancer', 'agency');
 

@@ -36,6 +36,9 @@ model TestimonialRequest {
   expires_at                 DateTime
   completed_at               DateTime?
   presigned_url_generated_at DateTime?
+  title                      String?
+  message                    String?
+  questions                  Json?
   created_at                 DateTime      @default(now())
   updated_at                 DateTime      @updatedAt
   testimonial                Testimonial?
