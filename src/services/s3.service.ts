@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { nanoid } from "nanoid";
@@ -167,17 +168,32 @@ export const verifyS3ObjectExists = async (key: string): Promise<boolean> => {
     await s3Client.send(
       new HeadObjectCommand({
         Bucket: env.AWS_BUCKET_NAME,
-        Key: key
-      })
+        Key: key,
+      }),
     );
 
     return true;
   } catch (err) {
     logger.warn(
       { key, err },
-      "S3 object does not exist or could not be accessed"
+      "S3 object does not exist or could not be accessed",
     );
 
     return false;
+  }
+};
+
+export const deleteFromS3 = async (key: string): Promise<void> => {
+  try {
+    await s3Client.send(
+      new DeleteObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+      }),
+    );
+    logger.info({ key }, "Deleted from s3");
+  } catch (err) {
+    logger.error({ key, err }, "Failed to delete from S3");
+    throw new S3UploadError(`Failed to delete ${key}`);
   }
 };
