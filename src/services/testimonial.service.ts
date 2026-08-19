@@ -6,6 +6,30 @@ import { ApiError } from "../utils/ApiError";
 import { logger } from "../config/logger";
 import "dotenv/config";
 
+export const softDeleteTestimonial = async(testimonialId: string, userId: string) => {
+  const testimonial = await prisma.testimonial.findFirst({
+    where:{
+      id : testimonialId,
+      user_id: testimonialId
+    }
+  })
+
+  if (!testimonial) {
+    throw new ApiError(404, "Testimonial not found");
+  }
+
+  await prisma.testimonial.update({
+    where:{
+      id: testimonialId
+    },
+    data: {
+      deleted_at: new Date(),
+
+    }
+  })
+
+}
+
 
 export const confirmTestimonialUpload = async (
   token: string,

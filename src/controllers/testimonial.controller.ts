@@ -2,7 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { generatePresignedUploadUrl } from "../services/s3.service";
-import {confirmTestimonialUpload, publishTestimonial} from "../services/testimonial.service";
+import {confirmTestimonialUpload, publishTestimonial, softDeleteTestimonial} from "../services/testimonial.service";
 
 
 export const getUploadUrl = asyncHandler(async(req,res) =>{
@@ -42,3 +42,17 @@ export const publish = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, publishResponse, "Testimonial published"));
 });
+
+export const deleteTestimonial = asyncHandler(async (req,res)=>{
+  const { id } = req.params;
+
+  if (!id || Array.isArray(id)) {
+    throw new ApiError(400, "Invalid testimonial id");
+  }
+
+   await softDeleteTestimonial(id, req.user!.id);
+   res
+    .status(204)
+    .send();
+
+})
