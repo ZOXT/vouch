@@ -1,75 +1,71 @@
 import { prisma } from "../config/prisma";
 import { mediaQueue } from "../queues/media.queue";
-import { markRequestCompleted , getTestimonialRequestByToken} from "./testimonial-request.service";
+import {
+  markRequestCompleted,
+  getTestimonialRequestByToken,
+} from "./testimonial-request.service";
 import { verifyS3ObjectExists } from "./s3.service";
 import { ApiError } from "../utils/ApiError";
 import { logger } from "../config/logger";
 import "dotenv/config";
 
-export const softDeleteTestimonial = async(testimonialId: string, userId: string) => {
-  const testimonial = await prisma.testimonial.findFirst({
-    where:{
-      id : testimonialId,
-      user_id: testimonialId
-    }
-  })
+export const softDeleteTestimonial = async (
+  testimonialId: string,
+  userId: string,
+) => {
+  const testimonial = await prisma.testimonial.findUnique({
+    where: { id: testimonialId },
+  });
 
   if (!testimonial) {
     throw new ApiError(404, "Testimonial not found");
   }
 
+  if (testimonial.user_id !== userId) {
+    throw new ApiError(403, "You don't have access to this testimonial");
+  }
+
+  if (testimonial.deleted_at) {
+    throw new ApiError(404, "Testimonial not found");
+  }
+
   await prisma.testimonial.update({
-    where:{
-      id: testimonialId
-    },
-    data: {
-      deleted_at: new Date(),
-
-    }
-  })
-
-}
-
+    where: { id: testimonialId },
+    data: { deleted_at: new Date() },
+  });
+};
 
 export const confirmTestimonialUpload = async (
   token: string,
   key: string,
   duration?: number,
-  mimeType?: string
+  mimeType?: string,
 ) => {
-
   const request = await getTestimonialRequestByToken(token);
-
 
   if (!request.upload_key) {
     throw new ApiError(
       400,
-      "No upload has been initialized for this testimonial request."
+      "No upload has been initialized for this testimonial request.",
     );
   }
-
 
   if (request.upload_key !== key) {
     throw new ApiError(
       403,
-      "The uploaded file does not belong to this testimonial request."
+      "The uploaded file does not belong to this testimonial request.",
     );
   }
-
-
   const exists = await verifyS3ObjectExists(key);
-
 
   if (!exists) {
     throw new ApiError(
       400,
-      "Video upload could not be found. Please upload the video again."
+      "Video upload could not be found. Please upload the video again.",
     );
   }
 
-
   const completedRequest = await markRequestCompleted(token);
-
 
   const testimonial = await prisma.testimonial.create({
     data: {
@@ -83,29 +79,28 @@ export const confirmTestimonialUpload = async (
       mime_type: mimeType,
     },
   });
-
-
   await mediaQueue.add("process", {
     testimonialId: testimonial.id,
   });
-
 
   logger.info(
     {
       testimonialId: testimonial.id,
     },
-    "MEDIA JOB QUEUED"
+    "MEDIA JOB QUEUED",
   );
 
-
   return {
-  id: testimonial.id,
-  status: testimonial.status,
-  message: "Testimonial uploaded successfully and processing has started",
-}
+    id: testimonial.id,
+    status: testimonial.status,
+    message: "Testimonial uploaded successfully and processing has started",
+  };
 };
 
-export const publishTestimonial = async (testimonialId: string, userId: string) => {
+export const publishTestimonial = async (
+  testimonialId: string,
+  userId: string,
+) => {
   const testimonial = await prisma.testimonial.findUnique({
     where: { id: testimonialId },
   });

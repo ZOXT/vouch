@@ -29,7 +29,7 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   email: z
-    .string()
+    .string() 
     .email("Invalid email address")
     .transform((email) => email.trim().toLowerCase()),
 

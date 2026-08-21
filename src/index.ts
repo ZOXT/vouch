@@ -1,30 +1,32 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 import express from "express";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
+
 import pool from "./config/db";
+import "./config/env";
+
+import { logger } from "./config/logger";
 import { errorHandler } from "./middlewares/errorHandler";
+import { notFound } from "./middlewares/not-found.middleware";
+import { requestLogger } from "./middlewares/requestLogger.middleware";
+
 import authRouter from "./routes/auth.routes";
-import userRouter from "./routes/user.routes"
+import userRouter from "./routes/user.routes";
 import testimonialRequestRouter from "./routes/testimonial-request.routes";
 import testimonialRouter from "./routes/testimonial.routes";
-import { requestLogger } from "./middlewares/requestLogger.middleware";
-import { notFound } from "./middlewares/not-found.middleware";
 import searchRoutes from "./routes/search.routes";
-import cookieParser from "cookie-parser";
-import "./config/env";
-import { logger } from "./config/logger";
 
 const app = express();
-app.use(express.json());
+
+app.use(helmet());
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(requestLogger);
 
-app.use(helmet());
-
-app.use(express.json({ limit: "1mb" }));
-
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
@@ -37,10 +39,13 @@ app.use("/api/v1/search", searchRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(process.env.PORT, () => {
-  logger.info(`Server running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 3000;
 
-  pool.query("SELECT NOW()")
+app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
+
+  pool
+    .query("SELECT NOW()")
     .then(() => logger.info("Database connected"))
     .catch((err) => logger.error({ err }, "Database connection failed"));
 });

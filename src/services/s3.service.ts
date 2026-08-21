@@ -12,7 +12,7 @@ import { s3Client } from "../config/s3";
 import { ApiError } from "../utils/ApiError";
 import { getTestimonialRequestByToken } from "./testimonial-request.service";
 import { logger } from "../config/logger";
-import fs, { write, WriteStream } from "fs";
+import fs from "fs";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
 
@@ -196,4 +196,208 @@ export const deleteFromS3 = async (key: string): Promise<void> => {
     logger.error({ key, err }, "Failed to delete from S3");
     throw new S3UploadError(`Failed to delete ${key}`);
   }
+};
+
+export const generateAvatarUploadUrl = async (
+  userId: string,
+  fileType: string,
+) => {
+  if (!env.ALLOWED_AVATAR_TYPES.includes(fileType)) {
+    throw new ApiError(
+      400,
+      `File type "${fileType}" is not supported. Allowed: ${env.ALLOWED_AVATAR_TYPES.join(", ")}`,
+    );
+  }
+
+  const extensionMap: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  const extension = extensionMap[fileType];
+  if (!extension) {
+    throw new ApiError(400, "Unsupported avatar type");
+  }
+  
+  const key = `avatars/${userId}/${nanoid()}.${extension}`;
+
+  try {
+    const url = await getSignedUrl(
+      s3Client,
+      new PutObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+        ContentType: fileType,
+      }),
+      {
+        expiresIn: env.PRESIGNED_URL_EXPIRY,
+        signableHeaders: new Set(["content-type"]),
+      },
+    );
+
+    logger.info(
+      {
+        userId,
+        key,
+        contentType: fileType,
+      },
+      "Generated avatar upload URL",
+    );
+
+    return {
+      url,
+      key,
+      maxFileSizeBytes: env.MAX_AVATAR_SIZE_MB * 1024 * 1024,
+    };
+  } catch (err) {
+    logger.error(
+      { err, userId },
+      "Failed to generate avatar upload URL",
+    );
+
+    throw new ApiError(
+      500,
+      "Failed to generate avatar upload URL",
+    );
+  }
+};
+
+export const getS3ObjectMetadata = async (key: string) => {
+  try {
+    const response = await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+      }),
+    );
+
+    return {
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      etag: response.ETag,
+    };
+  } catch (err) {
+    logger.warn(
+      { key, err },
+      "Failed to retrieve S3 object metadata",
+    );
+
+    return null;
+  }
+};
+
+export const confirmAvatarUpload = async (
+  userId: string,
+  key: string,
+) => {
+  const expectedPrefix = `avatars/${userId}/`;
+
+  // Prevent a user from confirming an avatar belonging
+  // to another user's S3 namespace.
+  if (!key.startsWith(expectedPrefix)) {
+    throw new ApiError(403, "Invalid avatar upload key");
+  }
+
+  const metadata = await getS3ObjectMetadata(key);
+
+  if (!metadata) {
+    throw new ApiError(
+      400,
+      "Avatar upload could not be found. Please upload the image again.",
+    );
+  }
+
+  if (!metadata.contentType) {
+    throw new ApiError(
+      400,
+      "Uploaded avatar is missing a content type.",
+    );
+  }
+
+  if (!env.ALLOWED_AVATAR_TYPES.includes(metadata.contentType)) {
+    throw new ApiError(
+      400,
+      "Uploaded file type is not supported as an avatar.",
+    );
+  }
+
+  const maxAvatarSize =
+    env.MAX_AVATAR_SIZE_MB * 1024 * 1024;
+
+  if (
+    metadata.contentLength !== undefined &&
+    metadata.contentLength > maxAvatarSize
+  ) {
+    throw new ApiError(
+      400,
+      `Avatar exceeds the maximum size of ${env.MAX_AVATAR_SIZE_MB}MB.`,
+    );
+  }
+
+  /*
+   * Get the current user so we can remove the old avatar
+   * after the new upload has been verified.
+   */
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      avatar_url: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  /*
+   * Store the S3 key, not a short-lived presigned URL.
+   *
+   * The key is the stable source of truth.
+   */
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      avatar_url: key,
+    },
+  });
+
+  /*
+   * Delete the old avatar only after the new avatar
+   * has successfully been verified and saved.
+   */
+  if (user.avatar_url && user.avatar_url !== key) {
+    try {
+      await deleteFromS3(user.avatar_url);
+    } catch (err) {
+      /*
+       * Don't fail the avatar update because cleanup of
+       * the old object failed.
+       *
+       * The new avatar is already valid and saved.
+       */
+      logger.error(
+        {
+          userId,
+          oldAvatarKey: user.avatar_url,
+          err,
+        },
+        "Avatar updated but old avatar could not be deleted",
+      );
+    }
+  }
+
+  logger.info(
+    {
+      userId,
+      key,
+      contentType: metadata.contentType,
+      size: metadata.contentLength,
+    },
+    "Avatar upload confirmed",
+  );
+
+  return {
+    key,
+  };
 };

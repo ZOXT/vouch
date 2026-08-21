@@ -29,7 +29,11 @@ const envSchema = z.object({
  EMBEDDING_SERVICE_URL: z.string(),
 
  RESEND_API_KEY: z.string(),
- FROM_EMAIL: z.string()
+ FROM_EMAIL: z.string(),
+
+ ALLOWED_AVATAR_TYPES: z.string().transform(val => val.split(",")).default("image/jpeg,image/png,image/webp".split(",")),
+
+MAX_AVATAR_SIZE_MB: z.coerce.number().default(5)
 
 
 });
