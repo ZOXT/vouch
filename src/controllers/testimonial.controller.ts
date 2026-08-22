@@ -2,7 +2,52 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { generatePresignedUploadUrl } from "../services/s3.service";
-import {confirmTestimonialUpload, publishTestimonial, softDeleteTestimonial} from "../services/testimonial.service";
+import {confirmTestimonialUpload, publishTestimonial, softDeleteTestimonial, getTestimonialById, getTestimonials} from "../services/testimonial.service";
+
+
+export const listTestimonials = asyncHandler(async (req, res) => {
+  const userId = (req.user as { id: string }).id;
+  
+  const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 12;
+  const status = req.query.status as string | undefined;
+  const isPublished = req.query.isPublished !== undefined 
+    ? req.query.isPublished === "true" 
+    : undefined;
+  const sortBy = req.query.sortBy as string || "created_at";
+  const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
+  const search = req.query.search as string | undefined;
+
+  if (page < 1 || limit < 1 || limit > 100) {
+    throw new ApiError(400, "Invalid pagination parameters");
+  }
+
+  const result = await getTestimonials({
+    userId,
+    page,
+    limit,
+    status,
+    isPublished,
+    sortBy,
+    sortOrder,
+    search,
+  });
+
+  res.status(200).json(new ApiResponse(200, result, "Testimonials retrieved successfully"));
+});
+
+
+export const getTestimonial = asyncHandler(async (req,res) => {
+  const { id } = req.params;
+  const userId = (req.user as { id: string }).id;
+
+  if (!id || typeof id !== "string") {
+    throw new ApiError(400, "Invalid testimonial id");
+  }
+
+  const testimonial = await getTestimonialById(id, userId);
+  res.status(200).json(new ApiResponse(200, testimonial, "Testimonial retrieved successfully"));
+});
 
 
 export const getUploadUrl = asyncHandler(async(req,res) =>{

@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import { Prisma, TestimonialStatus } from '@prisma/client';
 import { mediaQueue } from "../queues/media.queue";
 import {
   markRequestCompleted,
@@ -8,6 +9,130 @@ import { verifyS3ObjectExists } from "./s3.service";
 import { ApiError } from "../utils/ApiError";
 import { logger } from "../config/logger";
 import "dotenv/config";
+import { Testimonial } from "@prisma/client";
+
+export interface GetTestimonialsOptions {
+  userId: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+  isPublished?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+}
+
+export const getTestimonials = async(options: GetTestimonialsOptions) =>     {
+  const {
+    userId,
+    page = 1,
+    limit = 12,
+    status,
+    isPublished,
+    sortBy = "created_at",
+    sortOrder = "desc",
+    search,
+  } = options;
+
+  const skip = (page - 1) * limit;
+
+  // where clause
+  const where: Prisma.TestimonialWhereInput = {
+    user_id: userId,
+    deleted_at: null,
+  };
+
+  if(status){
+    where.status = status as TestimonialStatus;
+  }
+
+  if (isPublished !== undefined) {
+    where.is_published = isPublished;
+  }
+  
+  if(search){
+    where.OR = [
+      {client_name : { contains: search, mode: "insensitive"} },
+      {client_email : { contains: search, mode: "insensitive"} }
+    ];
+  }
+
+  const orderBy: Prisma.TestimonialOrderByWithRelationInput = {
+    [sortBy]: sortOrder,
+  }
+
+  const total = await prisma.testimonial.count({ where });
+
+    const testimonials = await prisma.testimonial.findMany({
+    where,
+    orderBy,
+    skip,
+    take: limit,
+    select: {
+      id: true,
+      client_name: true,
+      client_email: true,
+      video_key: true,
+      thumbnail_key: true,
+      status: true,
+      duration_seconds: true,
+      sentiment: true,
+      industry: true,
+      pain_points: true,
+      outcomes: true,
+      is_published: true,
+      created_at: true,
+      updated_at: true,
+      request: {
+        select: {
+          token: true,
+          expires_at: true,
+          completed_at: true,
+        },
+      },
+    },
+  });
+
+  return {
+    data: testimonials,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrevious: page > 1,
+    },
+  };
+};
+
+export const getTestimonialById = async (testimonialId: string, userId: string) =>{
+  
+  const testimonial = await prisma.testimonial.findFirst({
+    where: {
+      id: testimonialId,
+      user_id: userId,
+      deleted_at: null,
+
+    },
+    include : {
+      request: {
+        select: {
+          token: true,
+          expires_at: true,
+          completed_at: true,
+        }
+      }
+
+    }
+  });
+   if (!testimonial) {
+    throw new ApiError(404, "Testimonial not found");
+  }
+
+  return testimonial;
+};
+
 
 export const softDeleteTestimonial = async (
   testimonialId: string,
@@ -118,3 +243,5 @@ export const publishTestimonial = async (
     data: { is_published: true, published_at: new Date() },
   });
 };
+
+
