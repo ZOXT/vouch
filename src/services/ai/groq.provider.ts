@@ -58,7 +58,7 @@ export class GroqProvider implements AIAnalysisProvider {
   private readonly client: Groq;
   private readonly model: string;
 
-  constructor(apiKey: string, model = "llama-3.3-70b-versatile") {
+  constructor(apiKey: string, model = "openai/gpt-oss-120b") {
     this.client = new Groq({ apiKey });
     this.model = model;
   }

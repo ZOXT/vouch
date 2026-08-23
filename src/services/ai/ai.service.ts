@@ -4,7 +4,7 @@ import { AIAnalysisResult } from "./types";
 
 const provider = new GroqProvider(
   env.GROQ_API_KEY,
-  env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
+  env.GROQ_MODEL ?? "openai/gpt-oss-120b"
 );
 
 export const analyzeTranscript = async (
