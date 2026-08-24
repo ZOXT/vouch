@@ -11,7 +11,6 @@ import { logger } from "../config/logger";
 import "dotenv/config";
 import { Testimonial } from "@prisma/client";
 import { getVideoUrl, getThumbnailUrl } from "../utils/media";
-import test from "node:test";
 
 export interface GetTestimonialsOptions {
   userId: string;
