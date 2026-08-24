@@ -13,6 +13,7 @@ const envSchema = z.object({
   // Only needed in development — production uses IAM role
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  CLOUDFRONT_DOMAIN: z.string(),
 
   // Config with defaults
   ALLOWED_VIDEO_TYPES: z.string().transform(str => str.split(",")).default(["video/mp4,video/quicktime,video/webm"]),

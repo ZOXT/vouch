@@ -10,6 +10,8 @@ import { ApiError } from "../utils/ApiError";
 import { logger } from "../config/logger";
 import "dotenv/config";
 import { Testimonial } from "@prisma/client";
+import { getVideoUrl, getThumbnailUrl } from "../utils/media";
+import test from "node:test";
 
 export interface GetTestimonialsOptions {
   userId: string;
@@ -57,6 +59,16 @@ export const getTestimonials = async(options: GetTestimonialsOptions) =>     {
     ];
   }
 
+  const allowedSortFields = ["created_at", "updated_at", "client_name", "duration_seconds", "confidence_score"];
+if (!allowedSortFields.includes(sortBy)) {
+  throw new ApiError(400, "Invalid sort field");
+}
+
+const allowedStatuses = ["pending", "media_processing", "transcribing", "ai_processing", "completed", "failed"];
+if (status && !allowedStatuses.includes(status)) {
+  throw new ApiError(400, "Invalid status");
+}
+
   const orderBy: Prisma.TestimonialOrderByWithRelationInput = {
     [sortBy]: sortOrder,
   }
@@ -69,41 +81,58 @@ export const getTestimonials = async(options: GetTestimonialsOptions) =>     {
     skip,
     take: limit,
     select: {
-      id: true,
-      client_name: true,
-      client_email: true,
-      video_key: true,
-      thumbnail_key: true,
-      status: true,
-      duration_seconds: true,
-      sentiment: true,
-      industry: true,
-      pain_points: true,
-      outcomes: true,
-      is_published: true,
-      created_at: true,
-      updated_at: true,
-      request: {
-        select: {
-          token: true,
-          expires_at: true,
-          completed_at: true,
-        },
-      },
+  id: true,
+  client_name: true,
+  client_email: true,
+
+  video_key: true,
+  thumbnail_key: true,
+
+  status: true,
+  duration_seconds: true,
+  sentiment: true,
+  industry: true,
+  pain_points: true,
+  outcomes: true,
+  is_published: true,
+
+  created_at: true,
+  updated_at: true,
+
+  request: {
+    select: {
+      token: true,
+      expires_at: true,
+      completed_at: true,
     },
+  },
+},
   });
 
+const data = testimonials.map((testimonial) => {
+  const {
+    video_key,
+    thumbnail_key,
+    ...rest
+  } = testimonial;
+
   return {
-    data: testimonials,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page * limit < total,
-      hasPrevious: page > 1,
-    },
+    ...rest,
+    thumbnail_url: getThumbnailUrl(thumbnail_key),
   };
+});
+
+  return {
+  data,
+  pagination: {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    hasNext: page * limit < total,
+    hasPrevious: page > 1,
+  },
+};
 };
 
 export const getTestimonialById = async (testimonialId: string, userId: string) =>{
@@ -130,10 +159,15 @@ export const getTestimonialById = async (testimonialId: string, userId: string) 
     throw new ApiError(404, "Testimonial not found");
   }
 
-  return testimonial;
+const { video_key, thumbnail_key, ...rest } = testimonial;
+
+return {
+  ...rest,
+  thumbnail_url: getThumbnailUrl(thumbnail_key),
+  video_url: getVideoUrl(video_key),
 };
 
-
+}
 export const softDeleteTestimonial = async (
   testimonialId: string,
   userId: string,
