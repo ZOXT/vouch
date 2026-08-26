@@ -2,6 +2,7 @@ import { createTestimonialRequest, getTestimonialRequestByToken} from "../servic
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
+import { getAvatarUrl } from "../utils/media";
 
 
 export const RequestTestimonial = asyncHandler(async (req,res)=> {
@@ -30,7 +31,7 @@ const publicRequest = {
      title: request.title,
     message: request.message,
     questions: request.questions,
-    logoUrl: request.user.avatar_url,
+    logoUrl: getAvatarUrl(request.user.avatar_url),
   };
   
   res.status(200).json(new ApiResponse(200, publicRequest, "Request found"));

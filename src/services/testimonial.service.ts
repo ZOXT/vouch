@@ -271,6 +271,10 @@ export const publishTestimonial = async (
     throw new ApiError(403, "You don't have access to this testimonial");
   }
 
+  if (testimonial.deleted_at || testimonial.status !== "completed") {
+    throw new ApiError(400, "Only completed testimonials can be published");
+  }
+
   return prisma.testimonial.update({
     where: { id: testimonialId },
     data: { is_published: true, published_at: new Date() },

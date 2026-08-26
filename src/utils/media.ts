@@ -19,3 +19,7 @@ export const getVideoUrl = (
 ): string | null => {
   return getCloudFrontUrl(key);
 };
+
+export const getAvatarUrl = (
+  key: string | null | undefined,
+): string | null => getCloudFrontUrl(key);
