@@ -87,22 +87,31 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { generateEmbedding } from "../services/embedding.service";
+import { logger } from "../config/logger";
 
 export const searchTestimonials = async (req: Request, res: Response) => {
-  const { query, userId, limit = 10, threshold = 0.5 } = req.body;
+  const { query } = req.body;
+  const userId = req.user?.id;
+  const requestedLimit = Number(req.body.limit ?? 10);
+  const threshold = Number(req.body.threshold ?? 0.5);
 
-  console.log("SEARCH REQUEST:", { query, userId, limit, threshold });
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 50) {
+    return res.status(400).json({ error: "limit must be an integer between 1 and 50" });
+  }
+
+  if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+    return res.status(400).json({ error: "threshold must be between 0 and 1" });
+  }
 
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     return res.status(400).json({ error: "Query is required" });
   }
 
   if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    console.log("Calling embedding service...");
     const queryEmbedding = await generateEmbedding(query.trim(), "query");
     const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
 
@@ -123,10 +132,8 @@ export const searchTestimonials = async (req: Request, res: Response) => {
     AND embedding IS NOT NULL
     AND status = 'completed'
   ORDER BY embedding <=> ${queryEmbeddingString}::vector
-  LIMIT ${limit}
+  LIMIT ${requestedLimit}
 `;
-
-    console.log(" Query returned", (results as any[]).length, "rows");
 
     const filtered = (results as any[])
       .map((r) => ({
@@ -147,10 +154,9 @@ export const searchTestimonials = async (req: Request, res: Response) => {
 
     res.json({ query, total: filtered.length, results: filtered });
   } catch (err) {
-    // Force it to console so you see it
-    console.error("SEARCH ERROR:", err);
+    logger.error({ err, userId }, "Search failed");
     res
       .status(500)
-      .json({ error: "Search failed", details: (err as Error).message });
+      .json({ error: "Search failed" });
   }
 };
