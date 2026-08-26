@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { registerUser, loginUser, verifyEmail, resendVerificationOTP } from "../services/auth.service";
+import { registerUser, loginUser, verifyEmail, resendVerificationOTP, revokeRefreshToken, rotateRefreshToken } from "../services/auth.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
@@ -25,6 +25,23 @@ export const resendOTP = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+};
+
+const setAuthCookies = (res: Response, token: string, refreshToken: string) => {
+  res.cookie("access_token", token, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.cookie("refresh_token", refreshToken, {
+    ...cookieOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+};
+
 export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress || "unknown";
@@ -36,12 +53,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  res.cookie("access_token", result.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+  if (!result.token || !result.refreshToken) {
+    throw new ApiError(500, "Unable to create an authenticated session");
+  }
+
+  setAuthCookies(res, result.token, result.refreshToken);
 
   res.status(200).json(new ApiResponse(200, { user: result.user }, "Login successful"));
 });
@@ -57,12 +73,7 @@ export const verifyEmailController = asyncHandler(async (req: Request, res: Resp
 
   const result = await verifyEmail(userId, otp);
 
-  res.cookie("access_token", result.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+  setAuthCookies(res, result.token, result.refreshToken);
 
   res.status(200).json(new ApiResponse(200, { user: result.user }, "Email verified successfully"));
 });
@@ -70,11 +81,20 @@ export const verifyEmailController = asyncHandler(async (req: Request, res: Resp
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
 
+  await revokeRefreshToken(req.cookies.refresh_token);
+
   res.clearCookie("access_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    ...cookieOptions,
+  });
+  res.clearCookie("refresh_token", {
+    ...cookieOptions,
   });
 
   res.status(200).json({ message: "Logged out successfully" });
+});
+
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rotateRefreshToken(req.cookies.refresh_token);
+  setAuthCookies(res, result.token, result.refreshToken);
+  res.status(200).json(new ApiResponse(200, { user: result.user }, "Session refreshed"));
 });

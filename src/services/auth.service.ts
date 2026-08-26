@@ -8,6 +8,7 @@ import { slugify } from "../utils/slugify";
 import { nanoid } from "nanoid";
 import { createAndSendOTP, verifyOTP, resendOTP} from "./otp.service";
 import { redis } from "../config/redis";
+import crypto from "crypto";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_SECONDS = 15 * 60;
@@ -16,6 +17,33 @@ const LOGIN_IP_LOCK_SECONDS = 60 * 60;
 
 const normalizeEmail = (email: string): string => {
   return email.toLowerCase().trim();
+};
+
+const createAccessToken = (user: { id: string; role: string }) =>
+  jwt.sign(
+    { id: user.id, role: user.role },
+    env.JWT_SECRET,
+    { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] },
+  );
+
+const hashRefreshToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
+const createRefreshToken = async (userId: string) => {
+  const token = crypto.randomBytes(48).toString("base64url");
+  const expiresAt = new Date(
+    Date.now() + env.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+  );
+
+  await prisma.refreshToken.create({
+    data: {
+      user_id: userId,
+      token_hash: hashRefreshToken(token),
+      expires_at: expiresAt,
+    },
+  });
+
+  return token;
 };
 
 export const resendVerificationOTP = async (
@@ -106,8 +134,8 @@ const clearFailedLogin = async (email: string, ip?: string) => {
 };
 
 export const verifyEmail = async (userId: string, otp: string) => {
-  const userExists = await prisma.user.findUnique({
-    where: { id: userId }
+  const userExists = await prisma.user.findFirst({
+    where: { id: userId, deleted_at: null }
   });
   if (!userExists) {
     throw new ApiError(404, "User not found");
@@ -122,13 +150,10 @@ export const verifyEmail = async (userId: string, otp: string) => {
   });
   // Clear any login attempts after successful verification
   await clearFailedLogin(user.email);
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] }
-  );
+  const token = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user.id);
   const { password_hash, ...safeUser } = user;
-  return { token, user: safeUser };
+  return { token, refreshToken, user: safeUser };
 };
 
 export const registerUser = async (data: RegisterInput) => {
@@ -163,8 +188,8 @@ export const registerUser = async (data: RegisterInput) => {
 export const loginUser = async (data: LoginInput, ip: string) => {
   const normalizedEmail = normalizeEmail(data.email);
   await checkLoginLock(normalizedEmail, ip);
-  const user = await prisma.user.findUnique({
-    where: { email: normalizedEmail }
+  const user = await prisma.user.findFirst({
+    where: { email: normalizedEmail, deleted_at: null }
   });
   if (!user) {
     await bcrypt.compare(data.password, env.DUMMY_PASSWORD_HASH);
@@ -194,15 +219,83 @@ export const loginUser = async (data: LoginInput, ip: string) => {
       email: user.email.replace(/(.{2}).+(@.+)/, "$1***$2")
     };
   }
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] }
-  );
+  const token = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user.id);
   const { password_hash, ...safeUser } = user;
   return {
     requiresVerification: false,
     token,
+    refreshToken,
     user: safeUser
   };
+};
+
+export const rotateRefreshToken = async (rawToken: string) => {
+  const tokenHash = hashRefreshToken(rawToken);
+  const replacementToken = crypto.randomBytes(48).toString("base64url");
+  const replacementHash = hashRefreshToken(replacementToken);
+  const expiresAt = new Date(
+    Date.now() + env.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+  );
+
+  const user = await prisma.$transaction(async (tx) => {
+    const existing = await tx.refreshToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: { user: true },
+    });
+
+    if (!existing || existing.expires_at <= new Date() || existing.user.deleted_at) {
+      throw new ApiError(401, "Invalid or expired refresh token");
+    }
+
+    if (existing.revoked_at) {
+      await tx.refreshToken.updateMany({
+        where: { user_id: existing.user_id, revoked_at: null },
+        data: { revoked_at: new Date() },
+      });
+      throw new ApiError(401, "Refresh token has already been used");
+    }
+
+    const revoked = await tx.refreshToken.updateMany({
+      where: { id: existing.id, revoked_at: null },
+      data: { revoked_at: new Date() },
+    });
+
+    if (revoked.count !== 1) {
+      throw new ApiError(401, "Refresh token has already been used");
+    }
+
+    await tx.refreshToken.create({
+      data: {
+        user_id: existing.user_id,
+        token_hash: replacementHash,
+        expires_at: expiresAt,
+      },
+    });
+
+    return existing.user;
+  });
+
+  const { password_hash, ...safeUser } = user;
+  return {
+    token: createAccessToken(user),
+    refreshToken: replacementToken,
+    user: safeUser,
+  };
+};
+
+export const revokeRefreshToken = async (rawToken?: string) => {
+  if (!rawToken) return;
+
+  await prisma.refreshToken.updateMany({
+    where: { token_hash: hashRefreshToken(rawToken), revoked_at: null },
+    data: { revoked_at: new Date() },
+  });
+};
+
+export const revokeAllRefreshTokens = async (userId: string) => {
+  await prisma.refreshToken.updateMany({
+    where: { user_id: userId, revoked_at: null },
+    data: { revoked_at: new Date() },
+  });
 };
