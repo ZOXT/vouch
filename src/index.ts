@@ -18,6 +18,8 @@ import userRouter from "./routes/user.routes";
 import testimonialRequestRouter from "./routes/testimonial-request.routes";
 import testimonialRouter from "./routes/testimonial.routes";
 import searchRoutes from "./routes/search.routes";
+import embedSectionRoutes from "./routes/embed-section.routes";
+import embedRouter from "./routes/embed.routes";
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/testimonial-requests", testimonialRequestRouter);
 app.use("/api/v1/testimonials", testimonialRouter);
 app.use("/api/v1/search", searchRoutes);
+app.use("/api/v1/embed-sections",embedSectionRoutes);
+app.use("/", embedRouter);
 
 app.use(notFound);
 app.use(errorHandler);
