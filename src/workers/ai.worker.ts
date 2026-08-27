@@ -113,6 +113,9 @@ const processAIJob = async (job: Job<AIJobData>) => {
         outcomes: analysis.outcomes,
         objections: analysis.objections,
         metadata: {
+          ...(testimonial.metadata && typeof testimonial.metadata === "object" && !Array.isArray(testimonial.metadata)
+            ? testimonial.metadata
+            : {}),
           piiTypes: piiResult.detected,
           riskLevel: privacyRisk.level,
           analysisModel: env.AI_MODEL ?? env.GROQ_MODEL,

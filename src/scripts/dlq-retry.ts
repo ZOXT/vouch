@@ -3,14 +3,16 @@ import { prisma } from "../config/prisma";
 import { mediaQueue, type MediaJobData } from "../queues/media.queue";
 import { transcriptionQueue, type TranscriptionJobData } from "../queues/transcription.queue";
 import { aiQueue, type AIJobData } from "../queues/ai.queue";
+import { embeddingQueue, type EmbeddingJobData } from "../queues/embedding.queue";
 
 const queueMap = {
   media: mediaQueue,
   transcription: transcriptionQueue,
   ai: aiQueue,
+  embedding: embeddingQueue,
 };
 
-type DLQJobPayload = MediaJobData | TranscriptionJobData | AIJobData;
+type DLQJobPayload = MediaJobData | TranscriptionJobData | AIJobData | EmbeddingJobData;
 
 const retryFailed = async () => {
   const failedJobs = await prisma.failedJob.findMany({
@@ -20,7 +22,7 @@ const retryFailed = async () => {
   console.log(`Found ${failedJobs.length} failed jobs`);
 
   for (const job of failedJobs) {
-    const queueName = job.queue_name as "media" | "transcription" | "ai";
+    const queueName = job.queue_name as "media" | "transcription" | "ai" | "embedding";
     const queue = queueMap[queueName];
     if (!queue) {
       console.warn(`No queue configured for ${job.queue_name}. Skipping ${job.id}.`);
@@ -35,6 +37,8 @@ const retryFailed = async () => {
       await transcriptionQueue.add(`retry-${job.id}`, payload as TranscriptionJobData);
     } else if (job.queue_name === "ai") {
       await aiQueue.add(`retry-${job.id}`, payload as AIJobData);
+    } else if (job.queue_name === "embedding") {
+      await embeddingQueue.add(`retry-${job.id}`, payload as EmbeddingJobData);
     } else {
       console.warn(`Unsupported queue ${job.queue_name} for failed job ${job.id}`);
       continue;

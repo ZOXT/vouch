@@ -219,6 +219,11 @@ mediaWorker.on("failed", async (job, err) => {
   );
 
   if (job && attemptsMade >= maxAttempts) {
+    await prisma.testimonial.update({
+      where: { id: job.data.testimonialId },
+      data: { status: "failed", failure_reason: err.message },
+    }).catch((dbError) => logger.error({ dbError, jobId: job.id }, "Failed to mark media job as failed"));
+
     await createFailedJob({
       queueName: "media",
       jobId: job.id,
