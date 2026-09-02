@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import { env } from "../config/env";
+import { logger } from "../config/logger";
+import { ApiError } from "../utils/ApiError";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -7,10 +9,12 @@ const resend = new Resend(env.RESEND_API_KEY);
 export const sendOTPEmail = async (
   email: string,
   name: string,
-  otp: string
+  otp: string,
+  expiresInMinutes: number
 ) => {
 
-  await resend.emails.send({
+  // The Resend SDK does not throw on API errors — it returns { error }.
+  const { error } = await resend.emails.send({
 
     from: env.FROM_EMAIL,
 
@@ -49,7 +53,7 @@ export const sendOTPEmail = async (
 
 
         <p>
-          This code expires in 10 minutes.
+          This code expires in ${expiresInMinutes} minutes.
         </p>
 
 
@@ -57,5 +61,10 @@ export const sendOTPEmail = async (
     `
 
   });
+
+  if (error) {
+    logger.error({ error, to: email }, "Failed to send OTP email");
+    throw new ApiError(502, "Failed to send verification email");
+  }
 
 };

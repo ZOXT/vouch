@@ -39,7 +39,7 @@ export const createAndSendOTP = async (userId: string, email: string, name: stri
   await redis.set(`email_verify:${userId}`, hashedOTP, "EX", OTP_EXPIRY);
   await redis.set(cooldownKey, "true", "EX", OTP_EXPIRY);
   await redis.del(`email_verify_attempts:${userId}`);
-  await sendOTPEmail(email, name, otp);
+  await sendOTPEmail(email, name, otp, OTP_EXPIRY / 60);
 };
 
 export const verifyOTP = async (userId: string, otp: string) => {
