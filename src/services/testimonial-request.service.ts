@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { prisma } from "../config/prisma";
 import { Prisma, TestimonialRequest } from "@prisma/client";
 import { ApiError } from "../utils/ApiError";
+import { getTestimonialRequestUrl } from "../utils/url";
 
 export const createTestimonialRequest = async ( 
   userId: string,
@@ -38,7 +39,7 @@ export const createTestimonialRequest = async (
   if (!user) {
   throw new ApiError(404, "User not found");
 }
-  const url = `${process.env.APP_URL}/${user.slug}/r/${token}`;
+  const url = getTestimonialRequestUrl(user.slug, token);
 
   return { request,url, };
 };
