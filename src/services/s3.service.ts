@@ -30,7 +30,30 @@ export class S3DownloadError extends Error {
   }
 }
 
-const maxFileSizeBytes = env.MAX_FILE_SIZE_MB * 1024 * 1024;
+export const maxFileSizeBytes = env.MAX_FILE_SIZE_MB * 1024 * 1024;
+
+export const createPresignedUploadUrl = async (
+  key: string,
+  fileType: string,
+): Promise<string> => {
+  try {
+    return await getSignedUrl(
+      s3Client,
+      new PutObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+        ContentType: fileType,
+      }),
+      {
+        expiresIn: env.PRESIGNED_URL_EXPIRY,
+        signableHeaders: new Set(["content-type"]),
+      },
+    );
+  } catch (err) {
+    logger.error({ err, key }, "Failed to generate presigned upload URL");
+    throw new ApiError(500, "Failed to generate upload URL");
+  }
+};
 
 export const generatePresignedUploadUrl = async (
   fileName: string,
@@ -49,40 +72,24 @@ export const generatePresignedUploadUrl = async (
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const key = `originals/${request.user_id}/${nanoid()}/${sanitizedFileName}`;
 
-  try {
-    const url = await getSignedUrl(
-      s3Client,
-      new PutObjectCommand({
-        Bucket: env.AWS_BUCKET_NAME,
-        Key: key,
-        ContentType: fileType,
-      }),
-      {
-        expiresIn: env.PRESIGNED_URL_EXPIRY,
-        signableHeaders: new Set(["content-type"]),
-      },
-    );
+  const url = await createPresignedUploadUrl(key, fileType);
 
-    await prisma.testimonialRequest.update({
-      where: {
-        id: request.id,
-      },
-      data: {
-        upload_key: key,
-        presigned_url_generated_at: new Date(),
-      },
-    });
+  await prisma.testimonialRequest.update({
+    where: {
+      id: request.id,
+    },
+    data: {
+      upload_key: key,
+      presigned_url_generated_at: new Date(),
+    },
+  });
 
-    logger.info(
-      { key, bucket: env.AWS_BUCKET_NAME },
-      "Generated presigned upload URL",
-    );
+  logger.info(
+    { key, bucket: env.AWS_BUCKET_NAME },
+    "Generated presigned upload URL",
+  );
 
-    return { url, key, maxFileSizeBytes };
-  } catch (err) {
-    logger.error({ err }, "Failed to generate presigned upload URL");
-    throw new ApiError(500, "Failed to generate upload URL");
-  }
+  return { url, key, maxFileSizeBytes };
 };
 
 export const downloadFromS3 = async (
