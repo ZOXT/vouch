@@ -57,6 +57,11 @@ export const getTestimonialRequestByToken = async (token: string) => {
   }
 
   if (request.expires_at < new Date()) {
+    // Lazily persist the expired status so the enum stays meaningful.
+    await prisma.testimonialRequest.update({
+      where: { id: request.id },
+      data: { status: "expired" },
+    });
     throw new ApiError(400, "This testimonial request has expired");
   }
 
