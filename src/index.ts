@@ -20,6 +20,7 @@ import testimonialRouter from "./routes/testimonial.routes";
 import searchRoutes from "./routes/search.routes";
 import embedSectionRoutes from "./routes/embed-section.routes";
 import embedRouter from "./routes/embed.routes";
+import campaignRoutes from "./routes/campaign.routes"
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/v1/testimonials", testimonialRouter);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/embed-sections",embedSectionRoutes);
 app.use("/", embedRouter);
+app.use("/api/v1/campaigns", campaignRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
