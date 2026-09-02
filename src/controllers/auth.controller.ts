@@ -3,6 +3,7 @@ import { registerUser, loginUser, verifyEmail, resendVerificationOTP, revokeRefr
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
+import { env } from "../config/env";
 
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -27,8 +28,9 @@ export const resendOTP = asyncHandler(async (req: Request, res: Response) => {
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  // SameSite=None requires Secure, otherwise browsers reject the cookie
+  secure: process.env.NODE_ENV === "production" || env.COOKIE_SAME_SITE === "none",
+  sameSite: env.COOKIE_SAME_SITE,
 };
 
 const setAuthCookies = (res: Response, token: string, refreshToken: string) => {
@@ -94,7 +96,13 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const refresh = asyncHandler(async (req: Request, res: Response) => {
-  const result = await rotateRefreshToken(req.cookies.refresh_token);
+  const refreshToken = req.cookies.refresh_token;
+
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  const result = await rotateRefreshToken(refreshToken);
   setAuthCookies(res, result.token, result.refreshToken);
   res.status(200).json(new ApiResponse(200, { user: result.user }, "Session refreshed"));
 });
