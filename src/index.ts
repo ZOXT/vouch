@@ -23,6 +23,10 @@ import embedRouter from "./routes/embed.routes";
 
 const app = express();
 
+// Trust the first proxy hop (nginx, Render, Railway, etc.) so req.ip reflects
+// the real client IP for rate limiting and login lockouts.
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
