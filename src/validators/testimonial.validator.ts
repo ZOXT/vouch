@@ -9,9 +9,8 @@ export const getUploadUrlSchema = z.object({
 export const confirmUploadSchema = z.object({
   token: z.string().min(1, "Token is required"),
   key: z.string().min(1, "S3 key is required"),
-  // fileName: z.string().min(1),
-  // fileType: z.string().min(1),
-  duration: z.number().optional(),
+  duration: z.number().int().positive().max(3_600).optional(),
+  mimeType: z.string().trim().max(100).optional(),
 });
 
 
