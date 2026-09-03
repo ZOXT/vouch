@@ -6,6 +6,7 @@ import { aiQueue } from "../queues/ai.queue";
 import { createFailedJob } from "../services/dlq.service";
 import type { TranscriptionJobData } from "../queues/transcription.queue";
 import { transcribeAudio } from "../services/transcription.service";
+import { generateAndUploadCaptions } from "../services/captions.service";
 
 const processTranscript = async (job: Job<TranscriptionJobData>) => {
   const { testimonialId } = job.data;
@@ -70,6 +71,27 @@ const processTranscript = async (job: Job<TranscriptionJobData>) => {
         status: "ai_processing",
       },
     });
+
+    // Captions are an enhancement, not the critical path — a failure here
+    // must never fail the transcription job.
+    try {
+      const captionsKey = await generateAndUploadCaptions(
+        testimonialId,
+        transcription.segments,
+      );
+
+      if (captionsKey) {
+        await prisma.testimonial.update({
+          where: { id: testimonialId },
+          data: { captions_key: captionsKey },
+        });
+      }
+    } catch (captionError) {
+      logger.error(
+        { testimonialId, err: captionError },
+        "Failed to generate captions, continuing without them"
+      );
+    }
 
     await prisma.aIUsage.create({
       data: {

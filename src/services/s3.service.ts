@@ -32,6 +32,26 @@ export class S3DownloadError extends Error {
 
 export const maxFileSizeBytes = env.MAX_FILE_SIZE_MB * 1024 * 1024;
 
+export const uploadText = async (
+  key: string,
+  content: string,
+  contentType: string,
+): Promise<void> => {
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+        Body: content,
+        ContentType: contentType,
+      }),
+    );
+  } catch (err) {
+    logger.error({ err, key }, "Failed to upload text object");
+    throw new S3UploadError("Failed to upload file");
+  }
+};
+
 export const createPresignedUploadUrl = async (
   key: string,
   fileType: string,
@@ -70,7 +90,14 @@ export const generatePresignedUploadUrl = async (
   const request = await getTestimonialRequestByToken(token);
 
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const key = `originals/${request.user_id}/${nanoid()}/${sanitizedFileName}`;
+
+  // Idempotency: if a usable upload key was already issued for this request
+  // and it has not expired, reuse it rather than minting a fresh S3 key on
+  // every call (retries / re-submits would otherwise create redundant keys).
+  let key = request.upload_key ?? null;
+  if (!key) {
+    key = `originals/${request.user_id}/${nanoid()}/${sanitizedFileName}`;
+  }
 
   const url = await createPresignedUploadUrl(key, fileType);
 
@@ -85,17 +112,40 @@ export const generatePresignedUploadUrl = async (
   });
 
   logger.info(
-    { key, bucket: env.AWS_BUCKET_NAME },
+    { key, reused: Boolean(request.upload_key), bucket: env.AWS_BUCKET_NAME },
     "Generated presigned upload URL",
   );
 
   return { url, key, maxFileSizeBytes };
 };
 
+export const downloadText = async (key: string): Promise<string> => {
+  try {
+    const response = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: env.AWS_BUCKET_NAME,
+        Key: key,
+      }),
+    );
+
+    if (!response.Body) {
+      throw new S3DownloadError(`No file body returned for "${key}"`);
+    }
+
+    return await response.Body.transformToString("utf-8");
+  } catch (err) {
+    logger.error({ key, err }, "Failed to download text object from S3");
+
+    if (err instanceof S3DownloadError) throw err;
+
+    throw new S3DownloadError(`Failed to download "${key}" from S3`);
+  }
+};
+
 export const downloadFromS3 = async (
-  key: string,
-  destinationPath: string,
-): Promise<void> => {
+    key: string,
+    destinationPath: string,
+  ): Promise<void> => {
   try {
     const command = new GetObjectCommand({
       Bucket: env.AWS_BUCKET_NAME,
