@@ -9,6 +9,9 @@ const envSchema = z.object({
   AWS_REGION: z.string().default("us-east-1"),
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),
+  // Comma-separated list of origins allowed to call the API with cookies
+  // (the dashboard frontend). Embed/public endpoints handle their own CORS.
+  CLIENT_ORIGIN: z.string().transform((value) => value.split(",").map((origin) => origin.trim())).default(["http://localhost:5173"]),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
   DUMMY_PASSWORD_HASH: z.string(),
 
@@ -33,6 +36,13 @@ const envSchema = z.object({
 
  RESEND_API_KEY: z.string(),
  FROM_EMAIL: z.string(),
+ REPLY_TO_EMAIL: z.string().optional(),
+
+ // Paddle billing (optional until configured)
+ PADDLE_API_KEY: z.string().optional(),
+ PADDLE_WEBHOOK_SECRET: z.string().optional(),
+ PADDLE_PRO_PRICE_ID: z.string().optional(),
+ PADDLE_ENV: z.enum(["sandbox", "production"]).default("production"),
 
  ALLOWED_AVATAR_TYPES: z.string().transform(val => val.split(",")).default("image/jpeg,image/png,image/webp".split(",")),
 
