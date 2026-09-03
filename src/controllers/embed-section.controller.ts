@@ -5,6 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse";
 import {
   createEmbedSection, updateEmbedSection, getPublicEmbedSection, deleteEmbedSection, getEmbedSection, listEmbedSections
 } from "../services/embed-section.service";
+import { previewEmbedWall } from "../services/embed-page.service";
+import { renderEmbedWall } from "../views/embed-wall.view";
 
 export const createEmbedSectionController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -18,6 +20,8 @@ export const createEmbedSectionController = asyncHandler(
       title,
       displayStyle,
       testimonialIds,
+      captionsEnabled,
+      theme,
     } = req.body;
 
     const embedSection = await createEmbedSection(
@@ -26,6 +30,8 @@ export const createEmbedSectionController = asyncHandler(
         title,
         displayStyle,
         testimonialIds,
+        captionsEnabled,
+        theme,
       },
     );
 
@@ -39,8 +45,23 @@ export const createEmbedSectionController = asyncHandler(
   },
 );
 
-export const getPublicEmbedSectionController = asyncHandler(
-  async (req, res) => {
+export const previewEmbedSectionController = asyncHandler(async (req, res) => {
+  const userId = (req.user as { id: string })?.id;
+  if (!userId) throw new ApiError(401, "Unauthorized");
+
+  const data = await previewEmbedWall(userId, {
+    title: req.body.title,
+    layout: req.body.displayStyle,
+    theme: req.body.theme ?? "minimal",
+    captionsEnabled: req.body.captionsEnabled,
+    testimonialIds: req.body.testimonialIds,
+  });
+
+  const html = renderEmbedWall(data);
+  res.status(200).json(new ApiResponse(200, { html }, "Embed preview rendered"));
+});
+
+export const getPublicEmbedSectionController = asyncHandler(  async (req, res) => {
     const { publicId } = req.params;
 
      if (!publicId || typeof publicId !== 'string') {

@@ -6,18 +6,32 @@ import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { getCloudFrontUrl, getThumbnailUrl } from "../utils/media";
 import { normalizeAllowedDomains } from "../utils/embed-domain";
+import { assertCanCreateEmbedSection } from "./subscription.service";
+
+export const EMBED_THEMES = [
+  "minimal",
+  "dark",
+  "gradient",
+  "editorial",
+] as const;
+export type EmbedTheme = (typeof EMBED_THEMES)[number];
+
+const isEmbedTheme = (value: unknown): value is EmbedTheme =>
+  EMBED_THEMES.includes(value as EmbedTheme);
 
 interface CreateEmbedSectionRequest {
   title: string;
   displayStyle: "grid" | "carousel" | "list";
+  theme?: EmbedTheme;
   testimonialIds: string[];
+  captionsEnabled?: boolean;
 }
 
 export const createEmbedSection = async (
   userId: string,
   input: CreateEmbedSectionRequest,
 ) => {
-  const { title, displayStyle, testimonialIds } = input;
+  const { title, displayStyle, theme, testimonialIds, captionsEnabled } = input;
 
   const cleanTitle = title?.trim();
 
@@ -32,6 +46,10 @@ export const createEmbedSection = async (
     );
   }
 
+  if (theme !== undefined && !isEmbedTheme(theme)) {
+    throw new ApiError(400, "Valid theme is required");
+  }
+
   if (
     !testimonialIds ||
     !Array.isArray(testimonialIds) ||
@@ -41,6 +59,8 @@ export const createEmbedSection = async (
   }
 
   const uniqueTestimonialIds = [...new Set(testimonialIds)];
+
+  await assertCanCreateEmbedSection(userId);
 
   const testimonials = await prisma.testimonial.findMany({
     where: {
@@ -117,7 +137,11 @@ export const createEmbedSection = async (
 
         layout: displayStyle,
 
+        theme: theme ?? "minimal",
+
         is_active: true,
+
+        captions_enabled: captionsEnabled ?? true,
 
         allowed_domains: [],
 
@@ -198,6 +222,8 @@ export const getPublicEmbedSection = async (publicId: string) => {
       public_id: true,
       title: true,
       layout: true,
+      theme: true,
+      captions_enabled: true,
 
       testimonials: {
         orderBy: {
@@ -210,9 +236,11 @@ export const getPublicEmbedSection = async (publicId: string) => {
             select: {
               id: true,
               client_name: true,
+              client_designation: true,
               video_key: true,
               thumbnail_key: true,
               duration_seconds: true,
+              captions_key: true,
             },
           },
         },
@@ -233,13 +261,17 @@ export const getPublicEmbedSection = async (publicId: string) => {
     publicId: embedSection.public_id,
     title: embedSection.title,
     layout: embedSection.layout,
+    theme: embedSection.theme,
+    captionsEnabled: embedSection.captions_enabled,
 
     testimonials: embedSection.testimonials.map(
       ({ position, testimonial }) => ({
         position,
         id: testimonial.id,
         clientName: testimonial.client_name,
+        clientDesignation: testimonial.client_designation,
         durationSeconds: testimonial.duration_seconds,
+        hasCaptions: Boolean(testimonial.captions_key),
 
         thumbnailUrl: getThumbnailUrl(testimonial.thumbnail_key),
         videoUrl: getCloudFrontUrl(testimonial.video_key),
@@ -250,9 +282,11 @@ export const getPublicEmbedSection = async (publicId: string) => {
 interface UpdateEmbedSectionRequest {
   title?: string;
   displayStyle?: "grid" | "carousel" | "list";
+  theme?: EmbedTheme;
   testimonialIds?: string[];
   allowedDomains?: string[];
   isActive?: boolean;
+  captionsEnabled?: boolean;
 }
 
 export const updateEmbedSection = async (
@@ -297,12 +331,24 @@ export const updateEmbedSection = async (
     updateData.layout = input.displayStyle;
   }
 
+  if (input.theme !== undefined) {
+    if (!isEmbedTheme(input.theme)) {
+      throw new ApiError(400, "Valid theme is required");
+    }
+
+    updateData.theme = input.theme;
+  }
+
   if (input.allowedDomains !== undefined) {
     updateData.allowed_domains = normalizeAllowedDomains(input.allowedDomains);
   }
 
   if (input.isActive !== undefined) {
     updateData.is_active = input.isActive;
+  }
+
+  if (input.captionsEnabled !== undefined) {
+    updateData.captions_enabled = input.captionsEnabled;
   }
 
   if (input.testimonialIds !== undefined) {

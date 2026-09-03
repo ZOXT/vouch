@@ -2,13 +2,14 @@ import { Router } from "express";
 import {  protect } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate";
 import {
-  createEmbedSectionController, updateEmbedSectionController, getPublicEmbedSectionController, deleteEmbedSectionController, getEmbedSectionController, listEmbedSectionsController
+  createEmbedSectionController, updateEmbedSectionController, getPublicEmbedSectionController, deleteEmbedSectionController, getEmbedSectionController, listEmbedSectionsController, previewEmbedSectionController
 } from "../controllers/embed-section.controller";
-import { createEmbedSectionSchema, updateEmbedSectionSchema } from "../validators/embed-section.validator";
+import { createEmbedSectionSchema, updateEmbedSectionSchema, previewEmbedSectionSchema } from "../validators/embed-section.validator";
 import { embedCors } from "../middlewares/embed-cors.middleware";
 
 const router = Router();
 
+router.post("/preview", protect, validate(previewEmbedSectionSchema), previewEmbedSectionController);
 router.post("/", protect, validate(createEmbedSectionSchema), createEmbedSectionController);
 router.get("/", protect, listEmbedSectionsController);
 router.get("/embed/:publicId", embedCors, getPublicEmbedSectionController);
