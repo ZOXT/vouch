@@ -1,0 +1,1 @@
+ALTER TABLE "Testimonial" ADD COLUMN "client_designation" TEXT;

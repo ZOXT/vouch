@@ -11,6 +11,7 @@ export const confirmUploadSchema = z.object({
   key: z.string().min(1, "S3 key is required"),
   duration: z.number().int().positive().max(3_600).optional(),
   mimeType: z.string().trim().max(100).optional(),
+  clientDesignation: z.string().trim().max(120).optional(),
 });
 
 

@@ -44,6 +44,7 @@ export const getCampaignUploadUrlSchema = z.object({
 export const submitCampaignTestimonialSchema = z.object({
   s3Key: z.string().trim().min(1, "S3 key is required").max(1_024),
   clientName: z.string().trim().min(1, "Client name is required").max(200),
+  clientDesignation: z.string().trim().max(120).optional(),
   clientEmail: z.string().trim().email("Invalid client email").max(320).optional(),
   duration: z.number().int().positive().max(3_600).optional(),
   mimeType: z.string().trim().max(100).optional(),

@@ -2,7 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { generatePresignedUploadUrl } from "../services/s3.service";
-import {confirmTestimonialUpload, publishTestimonial, softDeleteTestimonial, getTestimonialById, getTestimonials} from "../services/testimonial.service";
+import {confirmTestimonialUpload, publishTestimonial, softDeleteTestimonial, getTestimonialById, getTestimonials, getTestimonialCaptions} from "../services/testimonial.service";
 
 
 export const listTestimonials = asyncHandler(async (req, res) => {
@@ -50,6 +50,20 @@ export const getTestimonial = asyncHandler(async (req,res) => {
 });
 
 
+export const getCaptions = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = (req.user as { id: string }).id;
+
+  if (!id || typeof id !== "string") {
+    throw new ApiError(400, "Invalid testimonial id");
+  }
+
+  const vtt = await getTestimonialCaptions(id, userId);
+  res.setHeader("Cache-Control", "private, max-age=300");
+  res.status(200).type("text/vtt").send(vtt);
+});
+
+
 export const getUploadUrl = asyncHandler(async(req,res) =>{
     const {fileName, fileType, token} = req.body;
 
@@ -61,9 +75,9 @@ export const getUploadUrl = asyncHandler(async(req,res) =>{
 
 });
 export const confirmUpload = asyncHandler(async (req, res) => {
-  const { token, key, duration, mimeType } = req.body;
+  const { token, key, duration, mimeType, clientDesignation } = req.body;
 
-  const testimonial = await confirmTestimonialUpload(token, key, duration, mimeType);
+  const testimonial = await confirmTestimonialUpload(token, key, duration, mimeType, clientDesignation);
 
   res.status(201).json(
     new ApiResponse(201, testimonial, "Testimonial submitted successfully")

@@ -12,6 +12,11 @@ import {
 import { ApiError } from "../utils/ApiError";
 import { slugify } from "../utils/slugify";
 import { getCampaignUrl } from "../utils/url";
+import { notifyTestimonialReceived } from "./email.service";
+import {
+  assertCanCreateCampaign,
+  assertCanReceiveTestimonial,
+} from "./subscription.service";
 
 export interface CampaignInput {
   title: string;
@@ -33,12 +38,13 @@ export interface UpdateCampaignInput {
 }
 
 export interface CampaignTestimonialInput {
-  s3Key: string;
-  clientName: string;
-  clientEmail?: string;
-  duration?: number;
-  mimeType?: string;
-}
+    s3Key: string;
+    clientName: string;
+    clientDesignation?: string;
+    clientEmail?: string;
+    duration?: number;
+    mimeType?: string;
+  }
 
 const requireUserId = (userId: string) => {
   if (!userId) throw new ApiError(400, "Invalid or unauthorized request");
@@ -101,11 +107,13 @@ export const createCampaign = async (userId: string, input: CampaignInput) => {
   if (!title) throw new ApiError(400, "Title is required");
   validateMaxDuration(input.maxDuration);
 
-  if (!input.allowVideo && !input.allowText) {
-    throw new ApiError(400, "At least one submission type must be enabled");
-  }
+    if (!input.allowVideo && !input.allowText) {
+      throw new ApiError(400, "At least one submission type must be enabled");
+    }
 
-  const slug = await createUniqueSlug(title);
+    await assertCanCreateCampaign(userId);
+
+    const slug = await createUniqueSlug(title);
 
   try {
     const campaign = await prisma.campaign.create({
@@ -295,18 +303,21 @@ export const submitCampaignTestimonial = async (
     throw new ApiError(403, "The uploaded file does not belong to this campaign");
   }
 
-  const objectExists = await verifyS3ObjectExists(s3Key);
-  if (!objectExists) {
-    throw new ApiError(400, "Uploaded video could not be found. Please upload it again.");
-  }
+    const objectExists = await verifyS3ObjectExists(s3Key);
+    if (!objectExists) {
+      throw new ApiError(400, "Uploaded video could not be found. Please upload it again.");
+    }
 
-  const testimonial = await prisma.$transaction(async (tx) => {
+    await assertCanReceiveTestimonial(campaign.user_id);
+
+    const testimonial = await prisma.$transaction(async (tx) => {
     const created = await tx.testimonial.create({
       data: {
         user_id: campaign.user_id,
         campaign_id: campaign.id,
-        client_name: clientName,
-        client_email: input.clientEmail?.trim() || null,
+          client_name: clientName,
+          client_designation: input.clientDesignation?.trim() || null,
+          client_email: input.clientEmail?.trim() || null,
         video_key: s3Key,
         duration_seconds: input.duration,
         mime_type: input.mimeType?.trim() || null,
@@ -320,6 +331,12 @@ export const submitCampaignTestimonial = async (
     });
 
     return created;
+  });
+
+  void notifyTestimonialReceived(campaign.user_id, {
+    clientName: testimonial.client_name,
+    clientDesignation: testimonial.client_designation,
+    source: "campaign",
   });
 
   await mediaQueue.add("process", { testimonialId: testimonial.id });
