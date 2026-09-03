@@ -7,3 +7,6 @@ public/temp/*
 coverage/
 __pycache__/
 *.pyc
+
+frontend/
+postman/
