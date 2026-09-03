@@ -28,7 +28,7 @@ export const protect = async (
 
     const user = await prisma.user.findFirst({
       where: { id: tokenUser.id, deleted_at: null },
-      select: { id: true, role: true },
+      select: { id: true, role: true, email: true },
     });
 
     if (!user) {

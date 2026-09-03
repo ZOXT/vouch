@@ -8,11 +8,12 @@ export interface RateLimitResult {
 
 export class RateLimitService {
   static async consume(
+    namespace: string,
     key: string,
     capacity: number,
     interval: number,
   ): Promise<RateLimitResult> {
-    const redisKey = `rate:${key}`;
+    const redisKey = `rate:${namespace}:${key}`;
 
     const refillPerTokenMs = interval / capacity;
 
@@ -39,7 +40,7 @@ export class RateLimitService {
     }
   }
 
-  static async reset(key: string) {
-    await redis.del(`rate:${key}`);
+  static async reset(namespace: string, key: string) {
+    await redis.del(`rate:${namespace}:${key}`);
   }
 }
