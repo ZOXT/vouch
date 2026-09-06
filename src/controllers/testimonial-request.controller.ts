@@ -38,6 +38,8 @@ const publicRequest = {
     message: request.message,
     questions: request.questions,
     logoUrl: getAvatarUrl(request.user.avatar_url),
+    companyUrl: request.user.company_url,
+    companyName: request.user.company_name,
   };
   
   res.status(200).json(new ApiResponse(200, publicRequest, "Request found"));

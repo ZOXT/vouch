@@ -82,7 +82,7 @@ export const listTestimonialRequests = async (userId: string) => {
 
 export const getTestimonialRequestByToken = async (token: string) => {
   const request = await prisma.testimonialRequest.findUnique({
-    where: { token }, include: { user: { select: { avatar_url: true } } },
+    where: { token }, include: { user: { select: { avatar_url: true, company_url: true, company_name: true } } },
   });
 
   if (!request) {

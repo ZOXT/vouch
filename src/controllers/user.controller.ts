@@ -44,10 +44,10 @@ export const updatePassword = asyncHandler(async (req, res) => {
 });
 
 export const updateUserProfile = asyncHandler(async (req, res) => {
-  const { name, company_name } = req.body;
+  const { name, company_name, company_url } = req.body;
   const userId = (req.user as { id: string }).id;
 
-  const user = await updateProfile(userId, { name, company_name });
+  const user = await updateProfile(userId, { name, company_name, company_url });
   res
     .status(200)
     .json(new ApiResponse(200, user, "Profile updated successfully"));

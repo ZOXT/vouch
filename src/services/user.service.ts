@@ -44,11 +44,15 @@ export const changePassword = async (userId: string, currentPassword: string, ne
 
 export const updateProfile = async (
   userId: string,
-  data: { name?: string; company_name?: string }
+  data: { name?: string; company_name?: string | null; company_url?: string | null }
 ) => {
   const user = await prisma.user.update({
     where: { id: userId },
-    data
+    data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.company_name !== undefined ? { company_name: data.company_name } : {}),
+      ...(data.company_url !== undefined ? { company_url: data.company_url } : {}),
+    },
   });
 
   const { password_hash, avatar_url, ...safeUser } = user;

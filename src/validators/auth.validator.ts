@@ -1,3 +1,4 @@
+import { strongPasswordSchema } from "./password.validator";
 import { z } from "zod";
 
 export const registerSchema = z.object({
@@ -12,10 +13,7 @@ export const registerSchema = z.object({
     .email("Invalid email address")
     .transform((email) => email.trim().toLowerCase()),
 
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password cannot exceed 128 characters"),
+  password: strongPasswordSchema,
 
   role: z.enum(["freelancer", "agency"]),
 
