@@ -8,5 +8,5 @@ coverage/
 __pycache__/
 *.pyc
 
-frontend/
 postman/
+server-test*.log
