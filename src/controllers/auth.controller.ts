@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { registerUser, loginUser, verifyEmail, resendVerificationOTP, revokeRefreshToken, rotateRefreshToken } from "../services/auth.service";
+import { registerUser, loginUser, verifyEmail, resendVerificationOTP, revokeRefreshToken, rotateRefreshToken, requestPasswordReset, resetPassword as resetPasswordService } from "../services/auth.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
@@ -105,4 +105,24 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const result = await rotateRefreshToken(refreshToken);
   setAuthCookies(res, result.token, result.refreshToken);
   res.status(200).json(new ApiResponse(200, { user: result.user }, "Session refreshed"));
+});
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  await requestPasswordReset(req.body.email);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      null,
+      "If an account with that email exists, a password reset link has been sent.",
+    ),
+  );
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  await resetPasswordService(req.body.token, req.body.password);
+
+  res.status(200).json(
+    new ApiResponse(200, null, "Password reset successfully. You can now sign in."),
+  );
 });

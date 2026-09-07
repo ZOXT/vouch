@@ -5,6 +5,8 @@ import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/ApiError";
 import {
   otpTemplate,
+  passwordChangedTemplate,
+  passwordResetTemplate,
   testimonialReceivedTemplate,
   testimonialRequestTemplate,
   type EmailTemplate,
@@ -104,5 +106,28 @@ export const notifyTestimonialRequest = (
 ): void => {
   sendInBackground(email, testimonialRequestTemplate(input), {
     kind: "testimonial_request",
+  });
+};
+
+/** Notifies the user that their password was changed. Never throws. */
+export const notifyPasswordChanged = (email: string, name: string): void => {
+  sendInBackground(email, passwordChangedTemplate({ name }), {
+    kind: "password_changed",
+  });
+};
+
+export interface PasswordResetNotification {
+  name: string;
+  resetUrl: string;
+  expiresInMinutes: number;
+}
+
+/** Sends a password reset link to the user. Never throws. */
+export const notifyPasswordReset = (
+  email: string,
+  input: PasswordResetNotification,
+): void => {
+  sendInBackground(email, passwordResetTemplate(input), {
+    kind: "password_reset",
   });
 };

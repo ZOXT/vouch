@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError";
 import { generateAvatarUploadUrl, confirmAvatarUpload } from "./s3.service";
 import { getAvatarUrl } from "../utils/media";
 import { revokeAllRefreshTokens } from "./auth.service";
+import { notifyPasswordChanged } from "./email.service";
 
 export const getUserById = async (id: string) => {
   //check in db
@@ -33,12 +34,13 @@ export const changePassword = async (userId: string, currentPassword: string, ne
    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isValid) throw new ApiError(400, "Current password is incorrect");
 
-    const hashed =  await bcrypt.hash(newPassword, 10);
+const hashed =  await bcrypt.hash(newPassword, 10);
   await prisma.user.update({
     where: { id: userId },
     data: { password_hash: hashed }
   });
   await revokeAllRefreshTokens(userId);
+  notifyPasswordChanged(user.email, user.name);
 };
 
 

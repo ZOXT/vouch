@@ -7,6 +7,7 @@ import { ApiError } from "../utils/ApiError";
 import { slugify } from "../utils/slugify";
 import { nanoid } from "nanoid";
 import { createAndSendOTP, verifyOTP, resendOTP} from "./otp.service";
+import { notifyPasswordChanged, notifyPasswordReset } from "./email.service";
 import { redis } from "../config/redis";
 import crypto from "crypto";
 
@@ -14,6 +15,9 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_SECONDS = 15 * 60;
 const MAX_LOGIN_ATTEMPTS_IP = 20;
 const LOGIN_IP_LOCK_SECONDS = 60 * 60;
+
+const PASSWORD_RESET_EXPIRES_IN_MINUTES = 60;
+const REFRESH_REUSE_GRACE_MS = 15 * 1000;
 
 const normalizeEmail = (email: string): string => {
   return email.toLowerCase().trim();
@@ -238,6 +242,14 @@ export const rotateRefreshToken = async (rawToken: string) => {
     Date.now() + env.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
   );
 
+  const reusedWithinGrace = (entry: {
+    revoked_at: Date | null;
+  }): boolean =>
+    Boolean(
+      entry.revoked_at &&
+        Date.now() - entry.revoked_at.getTime() < REFRESH_REUSE_GRACE_MS,
+    );
+
   const user = await prisma.$transaction(async (tx) => {
     const existing = await tx.refreshToken.findUnique({
       where: { token_hash: tokenHash },
@@ -249,6 +261,20 @@ export const rotateRefreshToken = async (rawToken: string) => {
     }
 
     if (existing.revoked_at) {
+      if (reusedWithinGrace(existing)) {
+        // The same client almost certainly fired two refreshes in quick
+        // succession (StrictMode double effect, multiple tabs). Issue a
+        // fresh pair instead of killing every session.
+        await tx.refreshToken.create({
+          data: {
+            user_id: existing.user_id,
+            token_hash: replacementHash,
+            expires_at: expiresAt,
+          },
+        });
+        return existing.user;
+      }
+
       await tx.refreshToken.updateMany({
         where: { user_id: existing.user_id, revoked_at: null },
         data: { revoked_at: new Date() },
@@ -262,6 +288,22 @@ export const rotateRefreshToken = async (rawToken: string) => {
     });
 
     if (revoked.count !== 1) {
+      const after = await tx.refreshToken.findUnique({
+        where: { token_hash: tokenHash },
+        select: { revoked_at: true },
+      });
+
+      if (after && reusedWithinGrace(after)) {
+        await tx.refreshToken.create({
+          data: {
+            user_id: existing.user_id,
+            token_hash: replacementHash,
+            expires_at: expiresAt,
+          },
+        });
+        return existing.user;
+      }
+
       throw new ApiError(401, "Refresh token has already been used");
     }
 
@@ -298,4 +340,74 @@ export const revokeAllRefreshTokens = async (userId: string) => {
     where: { user_id: userId, revoked_at: null },
     data: { revoked_at: new Date() },
   });
+};
+
+const PASSWORD_RESET_TOKEN_BYTES = 48;
+
+export const requestPasswordReset = async (email: string) => {
+  const normalizedEmail = normalizeEmail(email);
+  const user = await prisma.user.findFirst({
+    where: { email: normalizedEmail, deleted_at: null },
+  });
+
+  // Always return the same response regardless of whether the account exists
+  // to avoid leaking which emails are registered.
+  if (!user) {
+    return;
+  }
+
+  const token = crypto.randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("base64url");
+  const tokenHash = hashRefreshToken(token);
+  const expiresAt = new Date(
+    Date.now() + PASSWORD_RESET_EXPIRES_IN_MINUTES * 60 * 1000,
+  );
+
+  await prisma.passwordResetToken.create({
+    data: {
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+    },
+  });
+
+  const resetUrl = `${env.APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+
+  notifyPasswordReset(user.email, {
+    name: user.name,
+    resetUrl,
+    expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES,
+  });
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const tokenHash = hashRefreshToken(token);
+
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { token_hash: tokenHash },
+    include: { user: true },
+  });
+
+  if (!record || record.user.deleted_at) {
+    throw new ApiError(400, "Invalid or expired reset token");
+  }
+
+  if (record.used_at || record.expires_at <= new Date()) {
+    throw new ApiError(400, "This reset link has expired or already been used");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.user_id },
+      data: { password_hash: hashedPassword },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: record.id },
+      data: { used_at: new Date() },
+    }),
+  ]);
+
+  await revokeAllRefreshTokens(record.user_id);
+  notifyPasswordChanged(record.user.email, record.user.name);
 };

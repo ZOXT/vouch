@@ -150,3 +150,52 @@ export const testimonialReceivedTemplate = (
     text: `Hi ${input.ownerName},\n\n${input.clientName} just submitted a video testimonial. It's being processed now.\n\nView it here: ${input.dashboardUrl}`,
   };
 };
+
+export const passwordChangedTemplate = (
+  input: { name: string },
+): EmailTemplate => {
+  const name = escapeHtml(input.name);
+
+  const html = layout(
+    "Your Vouch password was changed",
+    `${heading("Your password was changed")}
+     ${paragraph(`Hi ${name},`)}
+     ${paragraph(`This is a confirmation that your Vouch account password was changed successfully on <strong>${new Date().toUTCString()}</strong>.`)}
+     ${paragraph(`If you just did this, you can ignore this email — no further action is needed.`)}
+     ${muted(`If you didn't make this change, please contact us right away at <a href="mailto:support@tryvouch.me" style="color:${ACCENT};">support@tryvouch.me</a>.`)}`,
+  );
+
+  return {
+    subject: "Your Vouch password was changed",
+    html,
+    text: `Hi ${input.name},\n\nThis is a confirmation that your Vouch account password was changed successfully on ${new Date().toUTCString()}.\n\nIf you just did this, you can ignore this email.\n\nIf you didn't make this change, please contact us right away at support@tryvouch.me.`,
+  };
+};
+
+export interface PasswordResetEmailInput {
+  name: string;
+  resetUrl: string;
+  expiresInMinutes: number;
+}
+
+export const passwordResetTemplate = (
+  input: PasswordResetEmailInput,
+): EmailTemplate => {
+  const name = escapeHtml(input.name);
+
+  const html = layout(
+    "Reset your Vouch password",
+    `${heading("Reset your password")}
+     ${paragraph(`Hi ${name},`)}
+     ${paragraph(`We received a request to reset the password for your Vouch account. Click the button below to choose a new password. This link expires in ${input.expiresInMinutes} minutes.`)}
+     ${button(input.resetUrl, "Reset your password")}
+     ${muted(`If the button doesn't work, paste this link into your browser:<br><a href="${input.resetUrl}" style="color:${ACCENT};word-break:break-all;">${input.resetUrl}</a>`)}
+     ${muted(`If you didn't request this, you can safely ignore this email.`)}`,
+  );
+
+  return {
+    subject: "Reset your Vouch password",
+    html,
+    text: `Hi ${input.name},\n\nWe received a request to reset the password for your Vouch account. Use this link to choose a new password:\n\n${input.resetUrl}\n\nThis link expires in ${input.expiresInMinutes} minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+  };
+};

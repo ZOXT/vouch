@@ -28,6 +28,7 @@ model User {
   embedSections       EmbedSection[]
   campaigns           Campaign[]
   refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model TestimonialRequest {
@@ -85,6 +86,8 @@ model Testimonial {
   processed_at            DateTime?
   is_published            Boolean                @default(false)
   published_at            DateTime?
+  consent_given               Boolean                @default(false)
+  consent_at                  DateTime?
   deleted_at              DateTime?
   created_at              DateTime               @default(now())
   updated_at              DateTime               @updatedAt
@@ -112,18 +115,22 @@ model Testimonial {
 }
 
 model Subscription {
-    id                 String    @id @default(uuid())
-    user_id            String    @unique
-    provider           String    @default("paddle")
-    customer_id        String?
-    subscription_id    String?   @unique
-    plan               String    @default("free")
-    status             String    @default("active")
-    current_period_end DateTime?
-    created_at         DateTime  @default(now())
-    updated_at         DateTime  @updatedAt
+    id                     String    @id @default(uuid())
+    user_id                String    @unique
+    provider               String    @default("paddle")
+    customer_id            String?
+    subscription_id        String?   @unique
+    plan                   String    @default("free")
+    status                 String    @default("active")
+    price_id               String?
+    product_id             String?
+    current_period_end     DateTime?
+    scheduled_change_action String?
+    scheduled_change_at    DateTime?
+    created_at             DateTime  @default(now())
+    updated_at             DateTime  @updatedAt
 
-    user               User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    user                   User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   }
 
 model AIUsage {
@@ -231,6 +238,20 @@ model RefreshToken {
   token_hash String    @unique
   expires_at DateTime
   revoked_at DateTime?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([expires_at])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
   created_at DateTime  @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)

@@ -43,6 +43,18 @@ export const resendOTPValidator = z.object({
   userId:z.string().uuid()
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .email("Invalid email address")
+    .transform((email) => email.trim().toLowerCase()),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(20, "Invalid reset token"),
+  password: strongPasswordSchema,
+});
+
 // TypeScript types
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
