@@ -1,7 +1,19 @@
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/ApiError";
 
+// Single paid plan called "Pro" ($29/mo or $348/yr). All paid entitlement is
+// identical, so the model is purely paid-vs-free.
 export type Plan = "free" | "pro";
+export type PaidPlan = Exclude<Plan, "free">;
+
+export const PAID_PLANS: readonly PaidPlan[] = ["pro"];
+
+export const isPaidPlan = (plan: string | null | undefined): plan is PaidPlan =>
+  typeof plan === "string" && (PAID_PLANS as readonly string[]).includes(plan);
+
+export const PLAN_LABELS: Record<Exclude<Plan, "free">, string> = {
+  pro: "Pro",
+};
 
 export interface PlanLimits {
   testimonials: number;
@@ -9,13 +21,16 @@ export interface PlanLimits {
   embedSections: number;
 }
 
+const UNLIMITED = {
+  testimonials: Number.POSITIVE_INFINITY,
+  campaigns: Number.POSITIVE_INFINITY,
+  embedSections: Number.POSITIVE_INFINITY,
+};
+
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: { testimonials: 5, campaigns: 1, embedSections: 1 },
-  pro: {
-    testimonials: Number.POSITIVE_INFINITY,
-    campaigns: Number.POSITIVE_INFINITY,
-    embedSections: Number.POSITIVE_INFINITY,
-  },
+  // Paid plan carries the same unlimited entitlement (see AGENTS.md).
+  pro: UNLIMITED,
 };
 
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
@@ -26,8 +41,12 @@ export const getUserPlan = async (userId: string): Promise<Plan> => {
     select: { plan: true, status: true },
   });
 
-  if (subscription?.plan === "pro" && ACTIVE_STATUSES.has(subscription.status)) {
-    return "pro";
+  if (
+    subscription &&
+    isPaidPlan(subscription.plan) &&
+    ACTIVE_STATUSES.has(subscription.status)
+  ) {
+    return subscription.plan as Plan;
   }
 
   return "free";
@@ -103,8 +122,8 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
   ]);
 
   const plan: Plan =
-    subscription?.plan === "pro" && ACTIVE_STATUSES.has(subscription.status)
-      ? "pro"
+    subscription && isPaidPlan(subscription.plan) && ACTIVE_STATUSES.has(subscription.status)
+      ? (subscription.plan as Plan)
       : "free";
 
   return {

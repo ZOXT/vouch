@@ -1,9 +1,19 @@
 import { Router } from "express";
 import { protect } from "../middlewares/auth.middleware";
-import { createCheckout } from "../controllers/subscription.controller";
+import { validate } from "../middlewares/validate";
+import {
+  createPortalLink,
+  getCheckoutContextHandler,
+  getCountry,
+} from "../controllers/subscription.controller";
+import { checkoutContextSchema } from "../validators/billing.validator";
 
 const router = Router();
 
-router.post("/checkout", protect, createCheckout);
+router.get("/country", getCountry);
+
+router.post("/checkout-context", protect, validate(checkoutContextSchema), getCheckoutContextHandler);
+
+router.get("/portal", protect, createPortalLink);
 
 export default router;
