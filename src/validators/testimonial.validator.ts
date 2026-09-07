@@ -12,6 +12,7 @@ export const confirmUploadSchema = z.object({
   duration: z.number().int().positive().max(3_600).optional(),
   mimeType: z.string().trim().max(100).optional(),
   clientDesignation: z.string().trim().max(120).optional(),
+  consent: z.literal(true, { message: "You must consent to the testimonial being used for marketing" }),
 });
 
 

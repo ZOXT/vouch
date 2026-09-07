@@ -86,11 +86,13 @@
 
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
+import { Prisma } from "@prisma/client";
 import { generateEmbedding } from "../services/embedding.service";
 import { logger } from "../config/logger";
 
 export const searchTestimonials = async (req: Request, res: Response) => {
   const { query } = req.body;
+  const industry = typeof req.body.industry === "string" ? req.body.industry.trim() : "";
   const userId = req.user?.id;
   const requestedLimit = Number(req.body.limit ?? 10);
   const threshold = Number(req.body.threshold ?? 0.5);
@@ -115,6 +117,10 @@ export const searchTestimonials = async (req: Request, res: Response) => {
     const queryEmbedding = await generateEmbedding(query.trim(), "query");
     const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
 
+    const industryFilter = industry
+      ? Prisma.sql`AND industry ILIKE ${`%${industry}%`}`
+      : Prisma.empty;
+
     const results = await prisma.$queryRaw`
   SELECT
     id,
@@ -131,6 +137,7 @@ export const searchTestimonials = async (req: Request, res: Response) => {
   WHERE user_id = ${userId}
     AND embedding IS NOT NULL
     AND status = 'completed'
+    ${industryFilter}
   ORDER BY embedding <=> ${queryEmbeddingString}::vector
   LIMIT ${requestedLimit}
 `;

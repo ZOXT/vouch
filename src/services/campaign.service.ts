@@ -44,6 +44,7 @@ export interface CampaignTestimonialInput {
     clientEmail?: string;
     duration?: number;
     mimeType?: string;
+    consent?: boolean;
   }
 
 const requireUserId = (userId: string) => {
@@ -322,6 +323,8 @@ export const submitCampaignTestimonial = async (
         duration_seconds: input.duration,
         mime_type: input.mimeType?.trim() || null,
         status: "pending",
+        consent_given: input.consent === true,
+        ...(input.consent ? { consent_at: new Date() } : {}),
       },
     });
 

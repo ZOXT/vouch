@@ -56,7 +56,9 @@ export const getTestimonials = async(options: GetTestimonialsOptions) =>     {
   if(search){
     where.OR = [
       {client_name : { contains: search, mode: "insensitive"} },
-      {client_email : { contains: search, mode: "insensitive"} }
+      {client_email : { contains: search, mode: "insensitive"} },
+      {industry : { contains: search, mode: "insensitive"} },
+      {customer_type : { contains: search, mode: "insensitive"} }
     ];
   }
 
@@ -247,6 +249,7 @@ export const confirmTestimonialUpload = async (
     duration?: number,
     mimeType?: string,
     clientDesignation?: string,
+    consent?: boolean,
   ) => {
   const request = await getTestimonialRequestByToken(token);
 
@@ -276,7 +279,7 @@ export const confirmTestimonialUpload = async (
 
     const completedRequest = await markRequestCompleted(token);
 
-  const testimonial = await prisma.testimonial.create({
+const testimonial = await prisma.testimonial.create({
     data: {
       user_id: completedRequest.user_id,
       request_id: completedRequest.id,
@@ -287,6 +290,8 @@ export const confirmTestimonialUpload = async (
       status: "pending",
       duration_seconds: duration,
       mime_type: mimeType,
+      consent_given: consent === true,
+      ...(consent ? { consent_at: new Date() } : {}),
     },
   });
     void notifyTestimonialReceived(completedRequest.user_id, {

@@ -241,6 +241,8 @@ export const getPublicEmbedSection = async (publicId: string) => {
               thumbnail_key: true,
               duration_seconds: true,
               captions_key: true,
+              industry: true,
+              summary: true,
             },
           },
         },
@@ -270,6 +272,8 @@ export const getPublicEmbedSection = async (publicId: string) => {
         id: testimonial.id,
         clientName: testimonial.client_name,
         clientDesignation: testimonial.client_designation,
+        industry: testimonial.industry,
+        summary: testimonial.summary,
         durationSeconds: testimonial.duration_seconds,
         hasCaptions: Boolean(testimonial.captions_key),
 

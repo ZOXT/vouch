@@ -11,10 +11,13 @@ export interface EmbedWallData {
   theme: string;
   captionsEnabled: boolean;
   allowedDomains: string[];
+  searchPlaceholder: string;
   testimonials: {
     id: string;
     clientName: string;
     clientDesignation: string | null;
+    industry: string | null;
+    summary: string | null;
     durationSeconds: number | null;
     hasCaptions: boolean;
     thumbnailUrl: string | null;
@@ -33,6 +36,9 @@ export const getEmbedWallData = async (publicId: string): Promise<EmbedWallData>
     select: { allowed_domains: true },
   });
 
+  const firstIndustry =
+    section.testimonials.find((t) => t.industry)?.industry ?? null;
+
   return {
     publicId: section.publicId,
     title: section.title,
@@ -40,10 +46,15 @@ export const getEmbedWallData = async (publicId: string): Promise<EmbedWallData>
     theme: section.theme,
     captionsEnabled: section.captionsEnabled,
     allowedDomains: record?.allowed_domains ?? [],
+    searchPlaceholder: firstIndustry
+      ? `Search ${firstIndustry} testimonials — try a topic like "ROI" or "support"`
+      : "Search testimonial highlights, topics, or people",
     testimonials: section.testimonials.map((testimonial) => ({
       id: testimonial.id,
       clientName: testimonial.clientName,
       clientDesignation: testimonial.clientDesignation,
+      industry: testimonial.industry,
+      summary: testimonial.summary,
       durationSeconds: testimonial.durationSeconds,
       hasCaptions: testimonial.hasCaptions,
       thumbnailUrl: testimonial.thumbnailUrl,
@@ -78,6 +89,8 @@ export const previewEmbedWall = async (
       id: true,
       client_name: true,
       client_designation: true,
+      industry: true,
+      summary: true,
       thumbnail_key: true,
       video_key: true,
       duration_seconds: true,
@@ -88,6 +101,8 @@ export const previewEmbedWall = async (
   const byId = new Map(testimonials.map((t) => [t.id, t]));
   const ordered = uniqueIds.map((id) => byId.get(id)).filter((t) => t !== undefined);
 
+  const firstIndustry = ordered.find((t) => t.industry)?.industry ?? null;
+
   return {
     publicId: "preview",
     title: input.title?.trim() || null,
@@ -95,10 +110,15 @@ export const previewEmbedWall = async (
     theme: input.theme,
     captionsEnabled: input.captionsEnabled ?? true,
     allowedDomains: [],
+    searchPlaceholder: firstIndustry
+      ? `Search ${firstIndustry} testimonials — try a topic like "ROI" or "support"`
+      : "Search testimonial highlights, topics, or people",
     testimonials: ordered.map((t) => ({
       id: t.id,
       clientName: t.client_name,
       clientDesignation: t.client_designation,
+      industry: t.industry,
+      summary: t.summary,
       durationSeconds: t.duration_seconds,
       hasCaptions: Boolean(t.captions_key),
       thumbnailUrl: getThumbnailUrl(t.thumbnail_key),

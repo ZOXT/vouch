@@ -75,9 +75,9 @@ export const getUploadUrl = asyncHandler(async(req,res) =>{
 
 });
 export const confirmUpload = asyncHandler(async (req, res) => {
-  const { token, key, duration, mimeType, clientDesignation } = req.body;
+  const { token, key, duration, mimeType, clientDesignation, consent } = req.body;
 
-  const testimonial = await confirmTestimonialUpload(token, key, duration, mimeType, clientDesignation);
+  const testimonial = await confirmTestimonialUpload(token, key, duration, mimeType, clientDesignation, consent);
 
   res.status(201).json(
     new ApiResponse(201, testimonial, "Testimonial submitted successfully")

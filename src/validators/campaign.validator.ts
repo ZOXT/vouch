@@ -48,4 +48,5 @@ export const submitCampaignTestimonialSchema = z.object({
   clientEmail: z.string().trim().email("Invalid client email").max(320).optional(),
   duration: z.number().int().positive().max(3_600).optional(),
   mimeType: z.string().trim().max(100).optional(),
+  consent: z.literal(true, { message: "You must consent to the testimonial being used for marketing" }),
 });
