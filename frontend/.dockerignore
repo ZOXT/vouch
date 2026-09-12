@@ -4,4 +4,3 @@ dist
 .env.*
 *.tsbuildinfo
 Dockerfile
-nginx.conf
