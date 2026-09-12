@@ -370,7 +370,7 @@ export const requestPasswordReset = async (email: string) => {
     },
   });
 
-  const resetUrl = `${env.APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+  const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
 
   notifyPasswordReset(user.email, {
     name: user.name,

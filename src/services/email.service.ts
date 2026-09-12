@@ -90,7 +90,7 @@ export const notifyTestimonialReceived = async (
         clientName: input.clientName,
         clientDesignation: input.clientDesignation,
         source: input.source,
-        dashboardUrl: `${env.APP_URL}/dashboard`,
+        dashboardUrl: `${env.FRONTEND_URL}/dashboard`,
       }),
       { kind: "testimonial_received", ownerUserId },
     );

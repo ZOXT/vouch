@@ -16,7 +16,8 @@
     "worker:embedding": "tsx --env-file=.env src/workers/embedding.worker.ts",
     "dlq:retry": "tsx --env-file=.env src/scripts/dlq-retry.ts",
     "dlq:inspect": "tsx --env-file=.env src/scripts/dlq-inspect.ts",
-    "workers": "concurrently \"npm run worker:media\" \"npm run worker:transcription\" \"npm run worker:ai\" \"npm run worker:embedding\""
+    "workers": "concurrently \"npm run worker:media\" \"npm run worker:transcription\" \"npm run worker:ai\" \"npm run worker:embedding\"",
+    "workers:combined": "node dist/workers/index.js"
   },
   "keywords": [],
   "author": "",

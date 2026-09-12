@@ -1,0 +1,14 @@
+.git
+node_modules
+dist
+.env
+.env.*
+*.test.ts
+server-test*.log
+postman
+coverage
+frontend
+embedding-service
+.github
+__pycache__
+*.pyc

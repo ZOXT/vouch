@@ -9,6 +9,11 @@ const envSchema = z.object({
   AWS_REGION: z.string().default("us-east-1"),
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),
+  // Origin of the dashboard/SPA frontend. Browser-facing links (share links,
+  // password resets, dashboard links in emails) always point here; API calls
+  // still go to APP_URL. Same value as APP_URL in the single-public-domain
+  // Caddy setup, but kept separate so share links never point at an API host.
+  FRONTEND_URL: z.string().default("http://localhost:5173"),
   // Comma-separated list of origins allowed to call the API with cookies
   // (the dashboard frontend). Embed/public endpoints handle their own CORS.
   CLIENT_ORIGIN: z.string().transform((value) => value.split(",").map((origin) => origin.trim())).default(["http://localhost:5173"]),

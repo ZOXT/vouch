@@ -5,6 +5,6 @@ import { env } from "../config/env";
  * paths and call the matching API endpoints.
  */
 export const getTestimonialRequestUrl = (userSlug: string, token: string) =>
-  `${env.APP_URL}/${userSlug}/r/${token}`;
+  `${env.FRONTEND_URL}/${userSlug}/r/${token}`;
 
-export const getCampaignUrl = (slug: string) => `${env.APP_URL}/c/${slug}`;
+export const getCampaignUrl = (slug: string) => `${env.FRONTEND_URL}/c/${slug}`;

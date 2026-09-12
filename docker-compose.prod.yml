@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------------------
+# Production stack for Vouch on EC2 (t3.small)
+#
+# Only Caddy binds host ports (80/443) - everything else is internal to the
+# docker network. Secrets come from a server-side .env file (env_file below),
+# the same keys the API expects (DATABASE_URL, JWT_SECRET, GROQ_API_KEY, ...).
+#
+# Images are built in GitHub Actions and pushed to GHCR, then pulled here:
+#   docker compose pull && docker compose up -d
+#
+# One-off DB migration:
+#   docker compose run --rm api npx prisma migrate deploy
+# ---------------------------------------------------------------------------
+
+services:
+  api:
+    image: ghcr.io/zoxt/vouch-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "dist/index.js"]
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      REDIS_URL: redis://redis:6379
+      EMBEDDING_SERVICE_URL: http://embedding:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+      embedding:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    image: ghcr.io/zoxt/vouch-api:latest
+    command: ["node", "dist/workers/index.js"]
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      EMBEDDING_SERVICE_URL: http://embedding:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+      embedding:
+        condition: service_healthy
+    restart: unless-stopped
+
+  embedding:
+    image: ghcr.io/zoxt/vouch-embedding:latest
+    build:
+      context: ./embedding-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/zoxt/vouch-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  caddy-data:
+  caddy-config:
