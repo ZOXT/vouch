@@ -121,9 +121,14 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
     gap: 18px;
   }
   .wall__items--grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(235px, 300px));
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
+    align-items: stretch;
+  }
+  .wall__items--grid .card {
+    flex: 1 1 235px;
+    max-width: 300px;
   }
   .wall__items--carousel {
     overflow-x: auto;
@@ -344,6 +349,8 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
   .wall__items--list .card__name { font-size: 15px; }
   .wall__items--list .card__summary { flex-basis: 100%; margin-left: 216px; }
   @media (max-width: 480px) {
+    .wall { padding: 18px 14px; }
+    .wall__title { font-size: 19px; margin: 0 2px 18px; }
     .wall__items--list .card { flex-direction: column; align-items: stretch; }
     .wall__items--list .card__media { flex: none; }
     .wall__items--list .card__summary { margin-left: 0; }
@@ -409,6 +416,7 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
   .wall[data-theme="dark"] .card__name { color: #f9fafb; }
   .wall[data-theme="dark"] .card__designation { color: #9ca3af; font-size: 12px; }
   .wall[data-theme="dark"] .card__avatar { background: #1f2937; color: #e0e7ff; }
+  .wall[data-theme="dark"] .card__summary { color: #b8c3db; }
   .wall[data-theme="dark"] .wall__title { color: #f9fafb; }
 
   /* Gradient — bold vibrant tiles, glowing accents */
@@ -437,8 +445,9 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
   .wall[data-theme="gradient"] .card__play svg { color: #7c3aed; }
   .wall[data-theme="gradient"] .card__footer { background: #fff; border-radius: 14px; padding: 12px 14px; margin-top: 10px; box-shadow: 0 18px 40px -20px rgba(124,58,237,0.35); border: 1px solid #f1eafe; }
   .wall[data-theme="gradient"] .card__name { color: #111827; }
-  .wall[data-theme="gradient"] .card__designation { color: #7c6a9e; font-size: 12px; }
+  .wall[data-theme="gradient"] .card__designation { color: #5b21b6; font-size: 12px; }
   .wall[data-theme="gradient"] .card__avatar { background: linear-gradient(135deg,#6366f1,#ec4899); color: #fff; }
+  .wall[data-theme="gradient"] .card__summary { color: rgba(255,255,255,0.96); }
   .wall[data-theme="gradient"] .card:hover .card__media { transform: translateY(-2px); box-shadow: 0 20px 50px -16px rgba(124,58,237,0.5); }
 
   /* Editorial — sophisticated, quiet luxury, serif name */

@@ -35,21 +35,6 @@ const navItems = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-const BrLandMark = ({ user }: { user?: { avatar_url: string | null } | null }) => {
-  if (user?.avatar_url) {
-    return (
-      <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
-        <img src={user.avatar_url} alt="Company logo" className="h-full w-full object-cover" />
-      </span>
-    );
-  }
-  return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-      <Quote className="h-4 w-4" />
-    </span>
-  );
-};
-
 const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -57,7 +42,9 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 border-b border-gray-100 px-6">
-        <BrLandMark user={user} />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+          <Quote className="h-4 w-4 text-white" />
+        </span>
         <span className="text-lg font-bold tracking-tight text-gray-900">Vouch</span>
       </div>
 
@@ -89,9 +76,15 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
       <div className="border-t border-gray-100 p-3">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-              {user ? initialsOf(user.name) : "?"}
-            </span>
+            {user?.avatar_url ? (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100">
+                <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+              </span>
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                {user ? initialsOf(user.name) : "?"}
+              </span>
+            )}
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-gray-900">{user?.name}</span>
               <span className="block truncate text-xs text-gray-500">{user?.email}</span>
@@ -121,7 +114,6 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
 
 export const AppLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,7 +125,9 @@ export const AppLayout = () => {
       {/* Mobile header + drawer */}
       <div className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <BrLandMark user={user} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+            <Quote className="h-4 w-4 text-white" />
+          </span>
           <span className="text-lg font-bold text-gray-900">Vouch</span>
         </div>
         <button

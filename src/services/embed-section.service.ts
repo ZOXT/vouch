@@ -511,24 +511,49 @@ export const updateEmbedSection = async (
   return updatedSection;
 };
 
+const sectionTestimonialSelect = {
+  id: true,
+  client_name: true,
+  video_key: true,
+  thumbnail_key: true,
+  duration_seconds: true,
+  is_published: true,
+  status: true,
+} as const;
+
 const sectionInclude = {
   testimonials: {
     orderBy: { position: "asc" as const },
     include: {
       testimonial: {
-        select: {
-          id: true,
-          client_name: true,
-          video_key: true,
-          thumbnail_key: true,
-          duration_seconds: true,
-          is_published: true,
-          status: true,
-        },
+        select: sectionTestimonialSelect,
       },
     },
   },
 };
+
+const serializeSectionTestimonial = (testimonial: {
+  id: string;
+  client_name: string | null;
+  video_key: string | null;
+  thumbnail_key: string | null;
+  duration_seconds: number | null;
+  is_published: boolean;
+  status: string;
+}) => ({
+  ...testimonial,
+  thumbnail_url: getThumbnailUrl(testimonial.thumbnail_key),
+});
+
+const serializeSectionTestimonials = <T extends { testimonials: { testimonial: Parameters<typeof serializeSectionTestimonial>[0] }[] }>(
+  section: T,
+) => ({
+  ...section,
+  testimonials: section.testimonials.map((entry) => ({
+    ...entry,
+    testimonial: serializeSectionTestimonial(entry.testimonial),
+  })),
+});
 
 export const getEmbedSection = async (userId: string, id: string) => {
   const section = await prisma.embedSection.findFirst({
@@ -536,15 +561,17 @@ export const getEmbedSection = async (userId: string, id: string) => {
     include: sectionInclude,
   });
   if (!section) throw new ApiError(404, "Embed section not found");
-  return section;
+  return serializeSectionTestimonials(section);
 };
 
-export const listEmbedSections = async (userId: string) =>
-  prisma.embedSection.findMany({
+export const listEmbedSections = async (userId: string) => {
+  const sections = await prisma.embedSection.findMany({
     where: { user_id: userId },
     orderBy: { created_at: "desc" },
     include: sectionInclude,
   });
+  return sections.map(serializeSectionTestimonials);
+};
 
 export const deleteEmbedSection = async (userId: string, embedId: string) => {
   if (!embedId) {

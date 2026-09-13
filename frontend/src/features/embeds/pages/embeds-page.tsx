@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, PanelsTopLeft, Plus } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, PanelsTopLeft, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ const layoutLabels: Record<string, string> = {
 export const EmbedsPage = () => {
   const [embeds, setEmbeds] = useState<EmbedSection[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     embedsApi
@@ -70,7 +71,19 @@ export const EmbedsPage = () => {
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {embeds!.map((embed) => (
-            <Link key={embed.id} to={`/embeds/${embed.id}`} className="block">
+            <div
+              key={embed.id}
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate(`/embeds/${embed.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/embeds/${embed.id}`);
+                }
+              }}
+              className="block h-full cursor-pointer"
+            >
               <Card className="h-full transition-shadow hover:shadow-lifted">
                 <CardContent className="py-5">
                   <div className="flex items-start justify-between gap-3">
@@ -90,9 +103,18 @@ export const EmbedsPage = () => {
                     {embed.testimonials.slice(0, 5).map(({ testimonial }) => (
                       <span
                         key={testimonial.id}
-                        className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-brand-500 to-indigo-500 text-[10px] font-semibold text-white"
+                        className="relative flex h-9 w-14 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-brand-500 to-indigo-500 text-[10px] font-semibold text-white"
                       >
-                        {testimonial.client_name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
+                        {testimonial.thumbnail_url ? (
+                          <img
+                            src={testimonial.thumbnail_url}
+                            alt=""
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        ) : (
+                          testimonial.client_name.split(" ").map((p) => p[0]).join("").slice(0, 2)
+                        )}
                       </span>
                     ))}
                     {embed.testimonials.length > 5 && (
@@ -100,15 +122,30 @@ export const EmbedsPage = () => {
                     )}
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-500">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Eye className="h-3.5 w-3.5" /> {embed.view_count} views
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                    <span className="inline-flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+                      <Eye className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        {embed.view_count} views · {embed.testimonials.length} testimonials ·{" "}
+                        {formatDate(embed.created_at)}
+                      </span>
                     </span>
-                    <span>{embed.testimonials.length} testimonials · {formatDate(embed.created_at)}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/embeds/${embed.id}`);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </div>
           ))}
         </div>
       )}

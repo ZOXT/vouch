@@ -179,6 +179,7 @@ export interface EmbedTestimonial {
     client_name: string;
     video_key: string | null;
     thumbnail_key: string | null;
+    thumbnail_url: string | null;
     duration_seconds: number | null;
     is_published: boolean;
     status: TestimonialStatus;
