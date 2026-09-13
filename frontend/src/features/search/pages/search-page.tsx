@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Sparkles, AlertCircle } from "lucide-react";
+import { Search, Sparkles, AlertCircle, Play } from "lucide-react";
 import { apiFetch } from "@/lib/api/client";
 import type { SearchResult, SearchResponse } from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CopyButton } from "@/components/copy-button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { cn, initialsOf } from "@/lib/utils";
 
 const SIMILARITY_COLORS: Record<string, string> = {
   high: "bg-emerald-100 text-emerald-800",
@@ -56,44 +59,82 @@ function SkeletonCard() {
   );
 }
 
-function ResultCard({ result }: { result: SearchResult }) {
+function ResultCard({ result, onPlay }: { result: SearchResult; onPlay: () => void }) {
   const sentiment = getSentimentBadge(result.sentiment);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-card transition-shadow hover:shadow-lifted">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="truncate font-semibold text-gray-900">{result.clientName}</h3>
-        <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getSimilarityColor(result.similarity)}`}>
-          {(result.similarity * 100).toFixed(1)}%
-        </span>
-      </div>
-
-      {result.summary && (
-        <p className="mt-3 text-sm text-gray-700 leading-relaxed">{result.summary}</p>
-      )}
-
-      {result.transcript && (
-        <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">{result.transcript}</p>
-      )}
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge tone={sentiment.tone}>{sentiment.label}</Badge>
-        {result.industry && (
-          <span className="text-xs text-gray-500">{result.industry}</span>
-        )}
-      </div>
-
-      {result.keywords.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {result.keywords.map((kw) => (
-            <span key={kw} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {kw}
+    <div className="transition-shadow hover:shadow-lifted">
+      <button
+        type="button"
+        onClick={onPlay}
+        className="block w-full rounded-xl border border-gray-200 bg-white p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      >
+        <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-brand-500 via-indigo-500 to-fuchsia-500">
+          {result.thumbnailUrl ? (
+            <img
+              src={result.thumbnailUrl}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white/25">
+              {initialsOf(result.clientName)}
             </span>
-          ))}
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {result.videoUrl && (
+            <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-600 shadow-lg">
+              <Play className="ml-0.5 h-5 w-5 fill-current" />
+            </span>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <h3 className="truncate font-semibold text-gray-900">{result.clientName}</h3>
+          <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getSimilarityColor(result.similarity)}`}>
+            {(result.similarity * 100).toFixed(1)}%
+          </span>
+        </div>
+
+        {result.summary && (
+          <p className="mt-3 text-sm text-gray-700 leading-relaxed">{result.summary}</p>
+        )}
+
+        {result.transcript && (
+          <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">{result.transcript}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Badge tone={sentiment.tone}>{sentiment.label}</Badge>
+          {result.industry && (
+            <span className="text-xs text-gray-500">{result.industry}</span>
+          )}
+        </div>
+
+        {result.keywords.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {result.keywords.map((kw) => (
+              <span key={kw} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                {kw}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">{formatDate(result.createdAt)}</p>
+          <span className={cn("text-xs font-medium", result.videoUrl ? "text-brand-600" : "text-gray-300")}>
+            {result.videoUrl ? "Watch video" : "No video"}
+          </span>
+        </div>
+      </button>
+
+      {result.videoUrl && (
+        <div className="mt-2 flex justify-end px-1">
+          <CopyButton value={result.videoUrl} label="Share" copiedLabel="Link copied" size="sm" />
         </div>
       )}
-
-      <p className="mt-4 text-xs text-gray-400">{formatDate(result.createdAt)}</p>
     </div>
   );
 }
@@ -106,6 +147,7 @@ export const SearchPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.5);
   const [hasSearched, setHasSearched] = useState(false);
+  const [activeResult, setActiveResult] = useState<SearchResult | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const doSearch = useCallback(async (q: string, ind: string, t: number) => {
@@ -277,11 +319,46 @@ export const SearchPage = () => {
           </p>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {results.results.map((r) => (
-              <ResultCard key={r.id} result={r} />
+              <ResultCard key={r.id} result={r} onPlay={() => r.videoUrl && setActiveResult(r)} />
             ))}
           </div>
         </div>
       )}
+
+      <Dialog
+        open={activeResult !== null}
+        onOpenChange={(open) => {
+          if (!open) setActiveResult(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl">
+          {activeResult?.videoUrl && (
+            <div>
+              <DialogTitle>{activeResult.clientName}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Video testimonial from {activeResult.clientName}
+              </DialogDescription>
+              <video
+                key={activeResult.id}
+                src={activeResult.videoUrl}
+                controls
+                autoPlay
+                playsInline
+                className="mt-4 aspect-video w-full rounded-lg bg-black"
+                poster={activeResult.thumbnailUrl ?? undefined}
+              />
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {activeResult.summary && (
+                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{activeResult.summary}</p>
+                  )}
+                </div>
+                <CopyButton value={activeResult.videoUrl} label="Share" copiedLabel="Link copied" size="sm" className="shrink-0" />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

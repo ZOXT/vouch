@@ -12,6 +12,27 @@ ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 const ALLOWED_CODECS = new Set(["h264", "hevc", "vp9", "av1"]);
 
+const IMAGE_FORMAT_HINTS = [
+  "gif",
+  "png",
+  "jpeg",
+  "jpg",
+  "mjpeg",
+  "webp",
+  "bmp",
+  "tiff",
+  "tif",
+  "avif",
+  "image2",
+];
+
+const FRIENDLY_FORMAT_HINT = "Please upload an MP4, MOV, or WebM video file.";
+
+const isImageFormat = (formatName: string): boolean => {
+  const lower = formatName.toLowerCase();
+  return IMAGE_FORMAT_HINTS.some((hint) => lower.includes(hint));
+};
+
 export class MediaValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -61,16 +82,43 @@ export const validateMedia = (filePath: string): Promise<MediaInfo> => {
       if (err) {
         reject(
           new MediaValidationError(
-            `ffprobe validation failed : ${err.message}`,
+            `We couldn't read this file. It may be corrupted or not a video. ${FRIENDLY_FORMAT_HINT}`,
           ),
         );
         return;
       }
+
+      const formatName = metadata.format?.format_name ?? "";
+      if (isImageFormat(formatName)) {
+        reject(
+          new MediaValidationError(
+            `That's an image, not a video. ${FRIENDLY_FORMAT_HINT}`,
+          ),
+        );
+        return;
+      }
+
       const videoStream = metadata.streams.find(
         (stream) => stream.codec_type === "video",
       );
       if (!videoStream) {
-        reject(new MediaValidationError("No video stream found."));
+        reject(
+          new MediaValidationError(
+            `We couldn't find any video in this file. ${FRIENDLY_FORMAT_HINT}`,
+          ),
+        );
+        return;
+      }
+
+      const hasAudio = metadata.streams.some(
+        (stream) => stream.codec_type === "audio",
+      );
+      if (!hasAudio) {
+        reject(
+          new MediaValidationError(
+            "This video has no audio. Please upload a video with sound so we can transcribe what's said.",
+          ),
+        );
         return;
       }
 
@@ -78,13 +126,19 @@ export const validateMedia = (filePath: string): Promise<MediaInfo> => {
 
       if (duration > MAX_DURATION_SECONDS) {
         reject(
-          new MediaValidationError(`Video exceeds ${MAX_DURATION_SECONDS} `),
+          new MediaValidationError(
+            `Videos can be up to ${MAX_DURATION_SECONDS} seconds long. Please submit a shorter video.`,
+          ),
         );
         return;
       }
       const codec = videoStream.codec_name ?? "";
       if (!ALLOWED_CODECS.has(codec)) {
-        reject(new MediaValidationError(`Unsupported codec : ${codec}`));
+        reject(
+          new MediaValidationError(
+            `Your video uses a format we can't process (${codec}). ${FRIENDLY_FORMAT_HINT}`,
+          ),
+        );
         return;
       }
       resolve({

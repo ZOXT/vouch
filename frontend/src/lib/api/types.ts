@@ -45,6 +45,7 @@ export interface TestimonialListItem {
   client_designation: string | null;
   client_email: string | null;
   thumbnail_url: string | null;
+  video_url: string | null;
   status: TestimonialStatus;
   duration_seconds: number | null;
   sentiment: Sentiment | null;
@@ -233,6 +234,8 @@ export interface SearchResult {
   keywords: string[];
   confidenceScore: number;
   similarity: number;
+  thumbnailUrl: string | null;
+  videoUrl: string | null;
   createdAt: string;
 }
 

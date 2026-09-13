@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Play, Clock } from "lucide-react";
 import { cn, formatDate, formatDuration, initialsOf } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
+import { CopyButton } from "@/components/copy-button";
 import type { TestimonialListItem } from "@/lib/api/types";
 
 const PROCESSING: TestimonialListItem["status"][] = ["pending", "media_processing", "transcribing", "ai_processing"];
@@ -70,6 +71,24 @@ export const TestimonialCard = ({ testimonial }: { testimonial: TestimonialListI
             {testimonial.is_published ? "Published" : "Unpublished"}
           </span>
         </div>
+        {testimonial.status === "completed" && testimonial.video_url && (
+          <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
+            <span
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <CopyButton
+                value={testimonial.video_url}
+                label="Share video"
+                copiedLabel="Link copied"
+                size="sm"
+                className="text-xs"
+              />
+            </span>
+          </div>
+        )}
       </div>
     </Link>
   );

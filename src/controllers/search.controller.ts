@@ -89,6 +89,7 @@ import { prisma } from "../config/prisma";
 import { Prisma } from "@prisma/client";
 import { generateEmbedding } from "../services/embedding.service";
 import { logger } from "../config/logger";
+import { getThumbnailUrl, getVideoUrl } from "../utils/media";
 
 export const searchTestimonials = async (req: Request, res: Response) => {
   const { query } = req.body;
@@ -121,7 +122,7 @@ export const searchTestimonials = async (req: Request, res: Response) => {
       ? Prisma.sql`AND industry ILIKE ${`%${industry}%`}`
       : Prisma.empty;
 
-    const results = await prisma.$queryRaw`
+const results = await prisma.$queryRaw`
   SELECT
     id,
     client_name,
@@ -131,6 +132,8 @@ export const searchTestimonials = async (req: Request, res: Response) => {
     industry,
     keywords,
     confidence_score,
+    video_key,
+    thumbnail_key,
     created_at,
     1 - (embedding <=> ${queryEmbeddingString}::vector) as similarity
   FROM "Testimonial"
@@ -155,6 +158,8 @@ export const searchTestimonials = async (req: Request, res: Response) => {
         keywords: r.keywords,
         confidenceScore: r.confidence_score,
         similarity: Math.round(Number(r.similarity) * 1000) / 1000,
+        thumbnailUrl: getThumbnailUrl(r.thumbnail_key),
+        videoUrl: getVideoUrl(r.video_key),
         createdAt: r.created_at,
       }))
       .filter((r) => r.similarity >= threshold);

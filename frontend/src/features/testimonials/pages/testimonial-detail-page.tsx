@@ -18,6 +18,7 @@ import {
 import { StatusBadge, SentimentBadge } from "@/components/status-badge";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { ApiError } from "@/lib/api/client";
+import { CopyButton } from "@/components/copy-button";
 import type { TestimonialDetail } from "@/lib/api/types";
 import { testimonialsApi } from "../api";
 import { CaptionOverlay } from "../components/caption-overlay";
@@ -135,6 +136,9 @@ export const TestimonialDetailPage = () => {
           <ArrowLeft className="h-4 w-4" /> Testimonials
         </Link>
         <div className="flex items-center gap-3">
+          {ready && testimonial.video_url && (
+            <CopyButton value={testimonial.video_url} label="Share" copiedLabel="Link copied" size="sm" />
+          )}
           <label className="flex items-center gap-2 text-sm text-gray-600">
             {testimonial.is_published ? <Globe className="h-4 w-4 text-emerald-600" /> : <GlobeLock className="h-4 w-4 text-gray-400" />}
             {testimonial.is_published ? "Published" : "Unpublished"}

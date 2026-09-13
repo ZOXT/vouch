@@ -124,6 +124,7 @@ const data = testimonials.map((testimonial) => {
   return {
     ...rest,
     thumbnail_url: getThumbnailUrl(thumbnail_key),
+    video_url: getVideoUrl(video_key),
   };
 });
 

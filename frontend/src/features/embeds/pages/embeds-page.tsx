@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RowsSkeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api/client";
 import { formatDate } from "@/lib/utils";
+import { CopyButton } from "@/components/copy-button";
 import type { EmbedSection } from "@/lib/api/types";
 import { embedsApi } from "../api";
 
@@ -130,18 +131,33 @@ export const EmbedsPage = () => {
                         {formatDate(embed.created_at)}
                       </span>
                     </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/embeds/${embed.id}`);
-                      }}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit
-                    </Button>
+                    <div className="flex shrink-0 gap-1.5">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <CopyButton
+                          value={`${window.location.origin}/embed/${embed.public_id}`}
+                          label="Share"
+                          copiedLabel="Link copied"
+                          size="sm"
+                        />
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/embeds/${embed.id}`);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

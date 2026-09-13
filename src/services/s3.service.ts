@@ -83,7 +83,7 @@ export const generatePresignedUploadUrl = async (
   if (!env.ALLOWED_VIDEO_TYPES.includes(fileType)) {
     throw new ApiError(
       400,
-      `File type "${fileType}" not supported. Allowed: ${env.ALLOWED_VIDEO_TYPES.join(", ")}`,
+      "That file type isn't supported. Please upload an MP4, MOV, or WebM video file.",
     );
   }
 
