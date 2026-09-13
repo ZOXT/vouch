@@ -1,9 +1,14 @@
 import { z } from "zod";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "../utils/media-limits";
 
 const title = z.string().trim().min(1, "Title is required").max(200);
 const description = z.string().trim().max(5_000).nullable();
 const questions = z.array(z.string().trim().min(1)).max(10).nullable();
-const maxDuration = z.number().int().positive().max(3_600);
+const maxDuration = z
+  .number()
+  .int()
+  .positive()
+  .max(MAX_TESTIMONIAL_DURATION_SECONDS, "Testimonials can be up to 2 minutes long");
 
 const submissionTypes = (value: { allowVideo?: boolean; allowText?: boolean }) =>
   value.allowVideo !== false || value.allowText !== false;
@@ -46,7 +51,12 @@ export const submitCampaignTestimonialSchema = z.object({
   clientName: z.string().trim().min(1, "Client name is required").max(200),
   clientDesignation: z.string().trim().max(120).optional(),
   clientEmail: z.string().trim().email("Invalid client email").max(320).optional(),
-  duration: z.number().int().positive().max(3_600).optional(),
+  duration: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_TESTIMONIAL_DURATION_SECONDS, "Testimonials can be up to 2 minutes long")
+    .optional(),
   mimeType: z.string().trim().max(100).optional(),
   consent: z.literal(true, { message: "You must consent to the testimonial being used for marketing" }),
 });

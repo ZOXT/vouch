@@ -8,6 +8,7 @@ import { FullPageSpinner } from "@/components/ui/spinner";
 import { Input, Label } from "@/components/ui/input";
 import { ApiError } from "@/lib/api/client";
 import { uploadToS3 } from "@/lib/upload";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "@/lib/limits";
 import type { PublicTestimonialRequest } from "@/lib/api/types";
 import { requestsApi } from "@/features/requests/api";
 import { SubmissionShell } from "../components/submission-shell";
@@ -43,6 +44,13 @@ export const RequestSubmitPage = () => {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!token || !video) return;
+    if (
+      video.durationSeconds != null &&
+      video.durationSeconds > MAX_TESTIMONIAL_DURATION_SECONDS
+    ) {
+      setError("Videos can be up to 2 minutes long. Please record a shorter video.");
+      return;
+    }
     setError(null);
     setPhase("uploading");
     setProgress(0);

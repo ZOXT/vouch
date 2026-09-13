@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleStop, CloudUpload, RefreshCcw, Video } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import { formatBytes } from "@/lib/upload";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "@/lib/limits";
 import { Button } from "@/components/ui/button";
 
 export interface SelectedVideo {
@@ -87,6 +88,10 @@ export const VideoInput = ({ onChange, disabled }: VideoInputProps) => {
     probe.onloadedmetadata = () => {
       const duration = Number.isFinite(probe.duration) ? Math.round(probe.duration) : undefined;
       URL.revokeObjectURL(url);
+      if (duration != null && duration > MAX_TESTIMONIAL_DURATION_SECONDS) {
+        setError("Videos can be up to 2 minutes long. Please pick a shorter clip.");
+        return;
+      }
       emit({ file, durationSeconds: duration });
     };
     probe.onerror = () => {
@@ -140,6 +145,9 @@ export const VideoInput = ({ onChange, disabled }: VideoInputProps) => {
     timerRef.current = window.setInterval(() => {
       elapsedRef.current += 1;
       setElapsed(elapsedRef.current);
+      if (elapsedRef.current >= MAX_TESTIMONIAL_DURATION_SECONDS) {
+        stopRecording();
+      }
     }, 1000);
   };
 
@@ -231,7 +239,7 @@ export const VideoInput = ({ onChange, disabled }: VideoInputProps) => {
               <p className="mt-3 text-sm font-medium text-gray-900">
                 Drop your video here, or <span className="text-brand-600 underline">browse</span>
               </p>
-              <p className="mt-1 text-xs text-gray-500">MP4, MOV, or WebM</p>
+              <p className="mt-1 text-xs text-gray-500">MP4, MOV, or WebM · up to 2 minutes</p>
               <input
                 type="file"
                 accept="video/mp4,video/quicktime,video/webm,video/*"

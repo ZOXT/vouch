@@ -17,6 +17,7 @@ import {
   assertCanCreateCampaign,
   assertCanReceiveTestimonial,
 } from "./subscription.service";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "../utils/media-limits";
 
 export interface CampaignInput {
   title: string;
@@ -56,8 +57,15 @@ const requireCampaignId = (campaignId: string) => {
 };
 
 const validateMaxDuration = (maxDuration: number) => {
-  if (!Number.isInteger(maxDuration) || maxDuration <= 0) {
-    throw new ApiError(400, "Invalid maximum duration");
+  if (
+    !Number.isInteger(maxDuration) ||
+    maxDuration <= 0 ||
+    maxDuration > MAX_TESTIMONIAL_DURATION_SECONDS
+  ) {
+    throw new ApiError(
+      400,
+      "Invalid maximum duration (testimonials can be up to 2 minutes long)",
+    );
   }
 };
 
@@ -293,6 +301,15 @@ export const submitCampaignTestimonial = async (
   const campaign = await findActiveCampaignBySlug(slug);
   if (!campaign.allow_video) {
     throw new ApiError(400, "This campaign does not accept video submissions");
+  }
+  if (
+    input.duration !== undefined &&
+    input.duration > MAX_TESTIMONIAL_DURATION_SECONDS
+  ) {
+    throw new ApiError(
+      400,
+      "Testimonials must be 2 minutes or shorter. Please record a shorter video.",
+    );
   }
   if (input.duration !== undefined && input.duration > campaign.max_duration) {
     throw new ApiError(400, "Testimonial exceeds the campaign maximum duration");

@@ -8,6 +8,7 @@ import { FullPageSpinner } from "@/components/ui/spinner";
 import { Input, Label } from "@/components/ui/input";
 import { ApiError } from "@/lib/api/client";
 import { uploadToS3 } from "@/lib/upload";
+import { MAX_TESTIMONIAL_DURATION_SECONDS, formatMaxDuration } from "@/lib/limits";
 import type { PublicCampaign } from "@/lib/api/types";
 import { campaignsApi } from "@/features/campaigns/api";
 import { SubmissionShell } from "../components/submission-shell";
@@ -40,8 +41,13 @@ export const CampaignSubmitPage = () => {
       });
   }, [slug]);
 
+  const effectiveMax =
+    campaign ? Math.min(campaign.max_duration, MAX_TESTIMONIAL_DURATION_SECONDS) : null;
+
   const tooLong =
-    campaign && video?.durationSeconds != null && video.durationSeconds > campaign.max_duration;
+    video?.durationSeconds != null &&
+    effectiveMax != null &&
+    video.durationSeconds > effectiveMax;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -141,12 +147,12 @@ export const CampaignSubmitPage = () => {
                 <VideoInput onChange={setVideo} disabled={busy} />
                 {campaign && (
                   <p className="-mt-3 text-xs text-gray-400">
-                    Max length: {Math.floor(campaign.max_duration / 60)} min {campaign.max_duration % 60}s
+                    Max length: {formatMaxDuration(effectiveMax ?? campaign.max_duration)}
                   </p>
                 )}
                 {tooLong && (
                   <p className="text-sm text-amber-600">
-                    This video is longer than the {campaign!.max_duration}s limit. Please trim it or record a shorter one.
+                    This video is longer than the {effectiveMax}s limit. Videos can be up to 2 minutes long — please trim it or record a shorter one.
                   </p>
                 )}
               </>

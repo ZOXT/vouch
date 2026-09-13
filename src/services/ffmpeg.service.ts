@@ -5,11 +5,11 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { logger } from "../config/logger";
+import { MAX_TESTIMONIAL_DURATION_SECONDS as MAX_DURATION_SECONDS } from "../utils/media-limits";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
-const MAX_DURATION_SECONDS = 120;
 const ALLOWED_CODECS = new Set(["h264", "hevc", "vp9", "av1"]);
 
 export class MediaValidationError extends Error {

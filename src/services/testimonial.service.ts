@@ -13,6 +13,7 @@ import { Testimonial } from "@prisma/client";
 import { getVideoUrl, getThumbnailUrl } from "../utils/media";
 import { notifyTestimonialReceived } from "./email.service";
 import { assertCanReceiveTestimonial } from "./subscription.service";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "../utils/media-limits";
 
 export interface GetTestimonialsOptions {
   userId: string;
@@ -264,6 +265,15 @@ export const confirmTestimonialUpload = async (
     throw new ApiError(
       403,
       "The uploaded file does not belong to this testimonial request.",
+    );
+  }
+  if (
+    duration !== undefined &&
+    duration > MAX_TESTIMONIAL_DURATION_SECONDS
+  ) {
+    throw new ApiError(
+      400,
+      "Testimonials must be 2 minutes or shorter. Please record a shorter video.",
     );
   }
     const exists = await verifyS3ObjectExists(key);
