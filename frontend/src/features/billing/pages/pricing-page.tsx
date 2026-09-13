@@ -10,6 +10,7 @@ import type { Plan, SubscriptionStatus } from "@/lib/api/types";
 import { billingApi, isPaidPlan, type PaidPlan } from "@/features/billing/api";
 import { areTierPriceIdsConfigured, BILLING_CYCLE_LABEL, TIERS, type BillingCycle } from "@/features/billing/tiers";
 import { usePaddle } from "@/features/billing/use-paddle";
+import { canonicalAppOrigin } from "@/lib/host";
 
 export const PricingPage = () => {
   const { user } = useAuth();
@@ -94,7 +95,7 @@ export const PricingPage = () => {
         priceId,
         email: user.email,
         customData,
-        successUrl: `${window.location.origin}/welcome`,
+        successUrl: `${canonicalAppOrigin()}/welcome`,
       });
     } catch (err) {
       toast.error(

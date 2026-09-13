@@ -35,9 +35,14 @@ api.tryvouch.me {
     encode gzip
 }
 
-# Marketing apex: serves the shared SPA, but routes are narrowed client-side
-# to public pages (landing, pricing, privacy) with a redirect to app.*.
+# Marketing apex: public pages only. Anything that isn't a marketing path is
+# server-side redirected (302) to the canonical app subdomain, so the apex
+# never serves dashboard/auth HTML (no soft-200s, SEO-safe, works without JS).
+# 302 (not 301) so a later apex path (e.g. /blog) isn't poisoned by a
+# browser/permanent cache; the client-side guard in the SPA handles routes
+# that change via router navigation without a page load.
 tryvouch.me {
+    # API + media + embed endpoints -> backend container
     handle /api/* {
         reverse_proxy api:3000
     }
@@ -51,9 +56,20 @@ tryvouch.me {
         reverse_proxy api:3000
     }
 
-    # Everything else -> SPA
-    handle {
+    # Hashed SPA assets must stay on the apex (same bundle serves the landing).
+    handle /assets/* {
         reverse_proxy frontend:80
+    }
+
+    # Public marketing pages -> SPA (landing root, pricing, privacy).
+    @marketing path_exact / /pricing /privacy /pricing/ /privacy/ /index.html
+    handle @marketing {
+        reverse_proxy frontend:80
+    }
+
+    # Everything else -> canonical app host.
+    handle {
+        redir https://app.tryvouch.me{uri} temporary
     }
 
     encode gzip

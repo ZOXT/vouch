@@ -22,6 +22,22 @@ export interface CanonicalLocation {
 }
 
 /**
+ * The canonical origin of the app host for the CURRENT host. On the apex (or
+ * any non-app host) this is "https://app.<host>"; on app.* it's the current
+ * origin; in local dev it's the current origin. Use this for any absolute
+ * URL that must land on the app (e.g. post-checkout redirects started on a
+ * marketing page).
+ */
+export const canonicalAppOrigin = (): string => {
+  const { hostname } = window.location;
+  const host = hostname.toLowerCase();
+
+  if (isLocalDev(host)) return window.location.origin;
+  if (host.startsWith(APP_HOST_PREFIX)) return window.location.origin;
+  return `https://${APP_HOST_PREFIX}${host}`;
+};
+
+/**
  * Returns the canonical URL to redirect to, or null when the current host and
  * path are already canonical. The current route may be passed explicitly so
  * the caller can enforce the canonical host on client-side navigations (the
