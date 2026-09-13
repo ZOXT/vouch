@@ -36,7 +36,27 @@ const cookieOptions = {
   ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
 };
 
+// When COOKIE_DOMAIN is set, a browser may still hold a host-only cookie for
+// THIS host from before the shared domain was introduced (e.g. created before
+// the apex/app split). Both have the same name, and cookie-parser keeps only
+// one non-deterministically, so the stale host-only token can win and log the
+// user out on the other subdomain. Kill the host-only variant on every write.
+const clearHostOnlyCookies = (res: Response) => {
+  if (!env.COOKIE_DOMAIN) return;
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" || env.COOKIE_SAME_SITE === "none",
+    sameSite: env.COOKIE_SAME_SITE,
+  });
+  res.clearCookie("refresh_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" || env.COOKIE_SAME_SITE === "none",
+    sameSite: env.COOKIE_SAME_SITE,
+  });
+};
+
 const setAuthCookies = (res: Response, token: string, refreshToken: string) => {
+  clearHostOnlyCookies(res);
   res.cookie("access_token", token, {
     ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -88,6 +108,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
   await revokeRefreshToken(req.cookies.refresh_token);
 
+  clearHostOnlyCookies(res);
   res.clearCookie("access_token", {
     ...cookieOptions,
   });

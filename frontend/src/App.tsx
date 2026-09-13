@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { AuthLayout } from "@/features/auth/auth-layout";
@@ -64,70 +64,100 @@ const PrivacyPage = lazy(() =>
 );
 
 const router = createBrowserRouter([
-  // Landing page (public, accessible to all)
   {
-    path: "/",
-    element: <Lazy><LandingPage /></Lazy>,
-  },
-  { path: "/pricing", element: <Lazy><PricingPage /></Lazy> },
-  { path: "/privacy", element: <Lazy><PrivacyPage /></Lazy> },
-  { path: "/welcome", element: <Lazy><WelcomePage /></Lazy> },
-  {
-    element: <GuestRoute />,
+    element: <HostCanonicalGuard />,
     children: [
+      // Landing page (public, accessible to all)
       {
-        element: <AuthLayout />,
+        path: "/",
+        element: <Lazy><LandingPage /></Lazy>,
+      },
+      { path: "/pricing", element: <Lazy><PricingPage /></Lazy> },
+      { path: "/privacy", element: <Lazy><PrivacyPage /></Lazy> },
+      { path: "/welcome", element: <Lazy><WelcomePage /></Lazy> },
+      {
+        element: <GuestRoute />,
         children: [
-          { path: "/login", element: <LoginPage /> },
-          { path: "/register", element: <RegisterPage /> },
-          { path: "/verify-email", element: <VerifyEmailPage /> },
-          { path: "/forgot-password", element: <ForgotPasswordPage /> },
-          { path: "/reset-password", element: <ResetPasswordPage /> },
+          {
+            element: <AuthLayout />,
+            children: [
+              { path: "/login", element: <LoginPage /> },
+              { path: "/register", element: <RegisterPage /> },
+              { path: "/verify-email", element: <VerifyEmailPage /> },
+              { path: "/forgot-password", element: <ForgotPasswordPage /> },
+              { path: "/reset-password", element: <ResetPasswordPage /> },
+            ],
+          },
         ],
       },
-    ],
-  },
-  // Public client-facing submission pages (no auth, no dashboard chrome)
-  { path: "/:slug/r/:token", element: <RequestSubmitPage /> },
-  { path: "/c/:slug", element: <CampaignSubmitPage /> },
-  {
-    element: <ProtectedRoute />,
-    children: [
+      // Public client-facing submission pages (no auth, no dashboard chrome)
+      { path: "/:slug/r/:token", element: <RequestSubmitPage /> },
+      { path: "/c/:slug", element: <CampaignSubmitPage /> },
       {
-        element: <AppLayout />,
+        element: <ProtectedRoute />,
         children: [
-          { path: "/dashboard", element: <Lazy><OverviewPage /></Lazy> },
-          { path: "/testimonials", element: <Lazy><TestimonialsPage /></Lazy> },
-          { path: "/testimonials/:id", element: <Lazy><TestimonialDetailPage /></Lazy> },
-          { path: "/search", element: <Lazy><SearchPage /></Lazy> },
-          { path: "/requests", element: <Lazy><RequestsPage /></Lazy> },
-          { path: "/campaigns", element: <Lazy><CampaignsPage /></Lazy> },
-          { path: "/campaigns/new", element: <Lazy><CampaignFormPage /></Lazy> },
-          { path: "/campaigns/:id", element: <Lazy><CampaignFormPage /></Lazy> },
-          { path: "/embeds", element: <Lazy><EmbedsPage /></Lazy> },
-          { path: "/embeds/new", element: <Lazy><EmbedEditorPage /></Lazy> },
-          { path: "/embeds/:id", element: <Lazy><EmbedEditorPage /></Lazy> },
-          { path: "/settings", element: <Lazy><SettingsPage /></Lazy> },
+          {
+            element: <AppLayout />,
+            children: [
+              { path: "/dashboard", element: <Lazy><OverviewPage /></Lazy> },
+              { path: "/testimonials", element: <Lazy><TestimonialsPage /></Lazy> },
+              { path: "/testimonials/:id", element: <Lazy><TestimonialDetailPage /></Lazy> },
+              { path: "/search", element: <Lazy><SearchPage /></Lazy> },
+              { path: "/requests", element: <Lazy><RequestsPage /></Lazy> },
+              { path: "/campaigns", element: <Lazy><CampaignsPage /></Lazy> },
+              { path: "/campaigns/new", element: <Lazy><CampaignFormPage /></Lazy> },
+              { path: "/campaigns/:id", element: <Lazy><CampaignFormPage /></Lazy> },
+              { path: "/embeds", element: <Lazy><EmbedsPage /></Lazy> },
+              { path: "/embeds/new", element: <Lazy><EmbedEditorPage /></Lazy> },
+              { path: "/embeds/:id", element: <Lazy><EmbedEditorPage /></Lazy> },
+              { path: "/settings", element: <Lazy><SettingsPage /></Lazy> },
+            ],
+          },
         ],
       },
+      { path: "*", element: <Navigate to="/dashboard" replace /> },
     ],
   },
-  { path: "*", element: <Navigate to="/dashboard" replace /> },
 ]);
+
+/**
+ * Enforces the canonical marketing-apex vs app.* split on EVERY navigation, not
+ * just the initial page load. Navigating by SPA route (clicking a link on the
+ * landing page, or the client-side `*`→/dashboard redirect) must not leave the
+ * user on the wrong host — that breaks the shared session cookie and the "app
+ * should live on app.tryvouch.me" rule.
+ *
+ * Redirecting across subdomains is a full page load, so the router cannot do it
+ * client-side: we issue a hard `window.location.replace` and hold the previous
+ * UI mounted is irrelevant since we render a full-page spinner.
+ */
+function HostCanonicalGuard() {
+  const location = useLocation();
+  const [bounce, setBounce] = useState(false);
+  const redirect = canonicalHostRedirect({
+    pathname: location.pathname,
+    search: location.search,
+  });
+
+  useEffect(() => {
+    if (redirect && !bounce) {
+      // One-shot: redrawing with the same redirect would crash React's
+      // "cannot update while rendering" guard, and repeating the replace is
+      // harmless but noisy. Mark it done so the spinner renders once.
+      setBounce(true);
+      window.location.replace(redirect);
+    }
+  }, [redirect, bounce]);
+
+  if (redirect) return <FullPageSpinner />;
+  return <Outlet />;
+}
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>;
 }
 
 export const App = () => {
-  // The dominant and app subdomain both serve this same bundle. Redirect the
-  // browser to the canonical host for the route (marketing apex vs app.*).
-  const redirect = canonicalHostRedirect();
-  if (redirect) {
-    window.location.replace(redirect);
-    return <FullPageSpinner />;
-  }
-
   return (
     <AuthProvider>
       <RouterProvider router={router} />

@@ -16,12 +16,21 @@ const isLocalDev = (host: string): boolean =>
   host.startsWith("192.168.") ||
   host.startsWith("10.");
 
+export interface CanonicalLocation {
+  pathname: string;
+  search?: string;
+}
+
 /**
  * Returns the canonical URL to redirect to, or null when the current host and
- * path are already canonical.
+ * path are already canonical. The current route may be passed explicitly so
+ * the caller can enforce the canonical host on client-side navigations (the
+ * browser URL does not change during router transitions).
  */
-export const canonicalHostRedirect = (): string | null => {
-  const { hostname, pathname, search } = window.location;
+export const canonicalHostRedirect = (current?: CanonicalLocation): string | null => {
+  const { hostname, pathname: winPathname, search: winSearch } = window.location;
+  const pathname = current?.pathname ?? winPathname;
+  const search = current?.search ?? winSearch;
   const host = hostname.toLowerCase();
 
   if (isLocalDev(host)) return null;
