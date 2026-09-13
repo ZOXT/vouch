@@ -366,7 +366,9 @@ export const PricingPage = () => {
             <Link to="/privacy" className="text-gray-500 transition-colors hover:text-gray-900">
               Privacy
             </Link>
-            <button className="text-gray-500 transition-colors hover:text-gray-900">Terms</button>
+            <Link to="/terms" className="text-gray-500 transition-colors hover:text-gray-900">
+              Terms
+            </Link>
             <button onClick={() => navigate("/")} className="text-gray-500 transition-colors hover:text-gray-900">
               Back to home
             </button>

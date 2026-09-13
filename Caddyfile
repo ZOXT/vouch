@@ -61,9 +61,9 @@ tryvouch.me {
         reverse_proxy frontend:80
     }
 
-    # Public marketing pages -> SPA (landing root, pricing, privacy).
+    # Public marketing pages -> SPA (landing root, pricing, privacy, terms).
     # `path` matches are exact; list trailing-slash variants explicitly.
-    @marketing path / /pricing /privacy /pricing/ /privacy/ /index.html
+    @marketing path / /pricing /privacy /terms /pricing/ /privacy/ /terms/ /index.html
     handle @marketing {
         reverse_proxy frontend:80
     }

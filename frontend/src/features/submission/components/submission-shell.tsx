@@ -32,6 +32,10 @@ export const SubmissionShell = ({
       Powered by <span className="font-semibold text-brand-600">Vouch</span> · tryvouch.me ·{" "}
       <Link to="/privacy" className="underline transition-colors hover:text-gray-500">
         Privacy Policy
+      </Link>{" "}
+      ·{" "}
+      <Link to="/terms" className="underline transition-colors hover:text-gray-500">
+        Terms of Service
       </Link>
     </footer>
   </div>

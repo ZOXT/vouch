@@ -5,7 +5,7 @@
  * (auth, dashboard, submission, welcome) lives on app.*.
  */
 
-export const MARKETING_PATHS = ["/", "/pricing", "/privacy"];
+export const MARKETING_PATHS = ["/", "/pricing", "/privacy", "/terms"];
 
 const APP_HOST_PREFIX = "app.";
 

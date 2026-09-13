@@ -62,6 +62,9 @@ const WelcomePage = lazy(() =>
 const PrivacyPage = lazy(() =>
   import("@/features/legal/privacy-page").then((m) => ({ default: m.PrivacyPage })),
 );
+const TermsPage = lazy(() =>
+  import("@/features/legal/terms-page").then((m) => ({ default: m.TermsPage })),
+);
 
 const router = createBrowserRouter([
   {
@@ -74,6 +77,7 @@ const router = createBrowserRouter([
       },
       { path: "/pricing", element: <Lazy><PricingPage /></Lazy> },
       { path: "/privacy", element: <Lazy><PrivacyPage /></Lazy> },
+      { path: "/terms", element: <Lazy><TermsPage /></Lazy> },
       { path: "/welcome", element: <Lazy><WelcomePage /></Lazy> },
       {
         element: <GuestRoute />,
