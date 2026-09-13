@@ -13,7 +13,8 @@ import {
   Search,
   Settings,
 } from "lucide-react";
-import { cn, initialsOf } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/avatar";
 import { useAuth } from "@/features/auth/auth-provider";
 import {
   DropdownMenu,
@@ -76,15 +77,11 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
       <div className="border-t border-gray-100 p-3">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-            {user?.avatar_url ? (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100">
-                <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
-              </span>
-            ) : (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-                {user ? initialsOf(user.name) : "?"}
-              </span>
-            )}
+            <Avatar
+              src={user?.avatar_url}
+              name={user?.name ?? "?"}
+              className="h-9 w-9 rounded-full bg-brand-100 text-sm font-semibold text-brand-700"
+            />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-gray-900">{user?.name}</span>
               <span className="block truncate text-xs text-gray-500">{user?.email}</span>

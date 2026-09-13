@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface CopyButtonProps extends Omit<ButtonProps, "onClick" | "children"> {
   value: string;
   label?: string;
   copiedLabel?: string;
+  /** Icon-only square button with an accessible label (no text). */
+  iconOnly?: boolean;
 }
 
-export const CopyButton = ({ value, label = "Copy", copiedLabel = "Copied", ...props }: CopyButtonProps) => {
+export const CopyButton = ({
+  value,
+  label = "Copy",
+  copiedLabel = "Copied",
+  iconOnly = false,
+  className,
+  ...props
+}: CopyButtonProps) => {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -30,9 +40,17 @@ export const CopyButton = ({ value, label = "Copy", copiedLabel = "Copied", ...p
   };
 
   return (
-    <Button variant="outline" size="sm" onClick={copy} {...props}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={copy}
+      aria-label={copied ? copiedLabel : label}
+      title={label}
+      className={cn(iconOnly && "h-8 w-8 shrink-0 rounded-full px-0", className)}
+      {...props}
+    >
       {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-      {copied ? copiedLabel : label}
+      {!iconOnly && (copied ? copiedLabel : label)}
     </Button>
   );
 };

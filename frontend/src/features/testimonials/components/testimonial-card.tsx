@@ -36,6 +36,24 @@ export const TestimonialCard = ({ testimonial }: { testimonial: TestimonialListI
           </span>
         )}
 
+        {testimonial.status === "completed" && testimonial.video_url && (
+          <span
+            className="absolute right-2 top-2"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <CopyButton
+              iconOnly
+              value={testimonial.video_url}
+              label="Share video"
+              copiedLabel="Link copied"
+              className="border-transparent bg-white/90 text-gray-700 shadow-sm hover:bg-white"
+            />
+          </span>
+        )}
+
         {processing && (
           <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
             Processing…
@@ -71,24 +89,6 @@ export const TestimonialCard = ({ testimonial }: { testimonial: TestimonialListI
             {testimonial.is_published ? "Published" : "Unpublished"}
           </span>
         </div>
-        {testimonial.status === "completed" && testimonial.video_url && (
-          <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
-            <span
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <CopyButton
-                value={testimonial.video_url}
-                label="Share video"
-                copiedLabel="Link copied"
-                size="sm"
-                className="text-xs"
-              />
-            </span>
-          </div>
-        )}
       </div>
     </Link>
   );

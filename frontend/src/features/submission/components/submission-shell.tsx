@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Quote } from "lucide-react";
+import { Avatar } from "@/components/avatar";
 
 /** Minimal branded frame for the public (client-facing) submission pages. */
 export const SubmissionShell = ({
@@ -16,13 +16,11 @@ export const SubmissionShell = ({
 }) => (
   <div className="min-h-screen bg-gradient-to-b from-brand-50/60 via-gray-50 to-gray-50">
     <header className="mx-auto flex max-w-2xl flex-col items-center justify-center px-6 pt-10">
-      {logoUrl ? (
-        <img src={logoUrl} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow" />
-      ) : (
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow">
-          <Quote className="h-5 w-5" />
-        </span>
-      )}
+      <Avatar
+        src={logoUrl}
+        name={companyName || "V"}
+        className="h-10 w-10 rounded-full bg-brand-600 text-sm font-semibold text-white shadow ring-2 ring-white"
+      />
       {companyName && (
         <p className="mt-2 text-sm font-medium text-gray-700">
           {companyUrl ? <a href={companyUrl} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600">{companyName}</a> : companyName}

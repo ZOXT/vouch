@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Camera, Globe, KeyRound, Loader2, UploadCloud } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { Avatar } from "@/components/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, FieldHint, FieldError } from "@/components/ui/input";
@@ -194,17 +195,11 @@ setUploadingLogo(false);
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center gap-5">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-100 text-base font-semibold text-brand-700">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt="Company logo"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                (profile.company_name.trim() || user.name).split(" ").map((p) => p[0]).join("").slice(0, 2)
-              )}
-            </span>
+            <Avatar
+              src={user.avatar_url}
+              name={profile.company_name.trim() || user.name}
+              className="h-16 w-16 rounded-xl bg-brand-100 text-base font-semibold text-brand-700"
+            />
 
             <div className="flex-1">
               <input

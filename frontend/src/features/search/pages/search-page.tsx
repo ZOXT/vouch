@@ -37,19 +37,15 @@ function formatDate(dateStr: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-card">
-      <div className="flex items-center justify-between">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+      <Skeleton className="aspect-video w-full rounded-lg" />
+      <div className="mt-3 flex items-center justify-between">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-6 w-16 rounded-full" />
       </div>
-      <Skeleton className="mt-4 h-4 w-full" />
-      <Skeleton className="mt-2 h-4 w-4/5" />
-      <Skeleton className="mt-3 h-3 w-full" />
-      <Skeleton className="mt-1.5 h-3 w-3/4" />
-      <div className="mt-4 flex items-center gap-2">
-        <Skeleton className="h-5 w-14 rounded-full" />
-        <Skeleton className="h-4 w-20" />
-      </div>
+      <Skeleton className="mt-2 h-3 w-full" />
+      <Skeleton className="mt-1.5 h-3 w-full" />
+      <Skeleton className="mt-3 h-3 w-2/3" />
       <div className="mt-3 flex gap-1.5">
         <Skeleton className="h-5 w-14 rounded-full" />
         <Skeleton className="h-5 w-16 rounded-full" />
@@ -62,79 +58,96 @@ function SkeletonCard() {
 function ResultCard({ result, onPlay }: { result: SearchResult; onPlay: () => void }) {
   const sentiment = getSentimentBadge(result.sentiment);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onPlay();
+    }
+  };
+
   return (
-    <div className="transition-shadow hover:shadow-lifted">
-      <button
-        type="button"
-        onClick={onPlay}
-        className="block w-full rounded-xl border border-gray-200 bg-white p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-      >
-        <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-brand-500 via-indigo-500 to-fuchsia-500">
-          {result.thumbnailUrl ? (
-            <img
-              src={result.thumbnailUrl}
-              alt=""
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white/25">
-              {initialsOf(result.clientName)}
-            </span>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          {result.videoUrl && (
-            <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-600 shadow-lg">
-              <Play className="ml-0.5 h-5 w-5 fill-current" />
-            </span>
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <h3 className="truncate font-semibold text-gray-900">{result.clientName}</h3>
-          <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getSimilarityColor(result.similarity)}`}>
-            {(result.similarity * 100).toFixed(1)}%
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onPlay}
+      onKeyDown={handleKeyDown}
+      className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-card transition-shadow hover:shadow-lifted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+    >
+      <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-brand-500 via-indigo-500 to-fuchsia-500">
+        {result.thumbnailUrl ? (
+          <img
+            src={result.thumbnailUrl}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white/25">
+            {initialsOf(result.clientName)}
           </span>
-        </div>
-
-        {result.summary && (
-          <p className="mt-3 text-sm text-gray-700 leading-relaxed">{result.summary}</p>
         )}
-
-        {result.transcript && (
-          <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">{result.transcript}</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        {result.videoUrl && (
+          <>
+            <span className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-600 shadow-lg">
+              <Play className="ml-0.5 h-4 w-4 fill-current" />
+            </span>
+            <span
+              className="absolute right-2 top-2"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <CopyButton
+                iconOnly
+                value={result.videoUrl}
+                label="Share video"
+                copiedLabel="Link copied"
+                className="border-transparent bg-white/90 text-gray-600 shadow-sm hover:bg-white"
+              />
+            </span>
+          </>
         )}
+      </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Badge tone={sentiment.tone}>{sentiment.label}</Badge>
-          {result.industry && (
-            <span className="text-xs text-gray-500">{result.industry}</span>
-          )}
-        </div>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <h3 className="truncate text-sm font-semibold text-gray-900">{result.clientName}</h3>
+        <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getSimilarityColor(result.similarity)}`}>
+          {(result.similarity * 100).toFixed(1)}%
+        </span>
+      </div>
 
-        {result.keywords.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {result.keywords.map((kw) => (
-              <span key={kw} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                {kw}
-              </span>
-            ))}
-          </div>
+      {result.summary && (
+        <p className="mt-2 text-sm text-gray-700 leading-relaxed line-clamp-2">{result.summary}</p>
+      )}
+
+      {result.transcript && (
+        <p className="mt-1.5 text-xs text-gray-500 line-clamp-2 leading-relaxed">{result.transcript}</p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Badge tone={sentiment.tone}>{sentiment.label}</Badge>
+        {result.industry && (
+          <span className="text-xs text-gray-500">{result.industry}</span>
         )}
+      </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="text-xs text-gray-400">{formatDate(result.createdAt)}</p>
-          <span className={cn("text-xs font-medium", result.videoUrl ? "text-brand-600" : "text-gray-300")}>
-            {result.videoUrl ? "Watch video" : "No video"}
-          </span>
-        </div>
-      </button>
-
-      {result.videoUrl && (
-        <div className="mt-2 flex justify-end px-1">
-          <CopyButton value={result.videoUrl} label="Share" copiedLabel="Link copied" size="sm" />
+      {result.keywords.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {result.keywords.map((kw) => (
+            <span key={kw} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+              {kw}
+            </span>
+          ))}
         </div>
       )}
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-gray-400">{formatDate(result.createdAt)}</p>
+        <span className={cn("text-xs font-medium", result.videoUrl ? "text-brand-600" : "text-gray-300")}>
+            {result.videoUrl ? "Watch video" : "No video"}
+        </span>
+      </div>
     </div>
   );
 }
@@ -293,8 +306,8 @@ export const SearchPage = () => {
       )}
 
       {loading && (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {Array.from({ length: 3 }, (_, i) => (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
@@ -317,7 +330,7 @@ export const SearchPage = () => {
           <p className="text-sm text-gray-600">
             Found <span className="font-semibold text-gray-900">{results.total}</span> result{results.total !== 1 && "s"} for &ldquo;{results.query}&rdquo;
           </p>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {results.results.map((r) => (
               <ResultCard key={r.id} result={r} onPlay={() => r.videoUrl && setActiveResult(r)} />
             ))}
