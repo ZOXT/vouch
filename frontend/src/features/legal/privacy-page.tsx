@@ -289,6 +289,9 @@ export const PrivacyPage = () => (
           <Link to="/terms" className="text-gray-500 transition-colors hover:text-gray-900">
             Terms
           </Link>
+          <Link to="/refunds" className="text-gray-500 transition-colors hover:text-gray-900">
+            Refunds
+          </Link>
         </div>
       </div>
     </footer>

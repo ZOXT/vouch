@@ -144,6 +144,7 @@ const FOOTER_LINKS = {
   Legal: [
     { label: "Privacy", to: "/privacy" },
     { label: "Terms", to: "/terms" },
+    { label: "Refunds", to: "/refunds" },
   ],
 } as const;
 

@@ -89,8 +89,11 @@ export const TermsPage = () => (
             </li>
             <li>
               <span className="font-medium">Refunds</span> — refunds are issued at our discretion in
-              accordance with Paddle's refund policies. Fees paid are non-refundable except where
-              required by law.
+              accordance with Paddle's refund policies. See our{" "}
+              <Link to="/refunds" className="text-brand-600 hover:text-brand-700">
+                Refund Policy
+              </Link>
+              . Fees paid are non-refundable except where required by law.
             </li>
             <li>
               <span className="font-medium">Price changes</span> — we may change plan prices or
