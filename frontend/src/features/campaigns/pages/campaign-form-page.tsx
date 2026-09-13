@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ApiError } from "@/lib/api/client";
+import { MAX_TESTIMONIAL_DURATION_SECONDS } from "@/lib/limits";
 import { campaignsApi, type CampaignInput } from "../api";
 
 const emptyForm = {
@@ -88,6 +89,7 @@ export const CampaignFormPage = () => {
         const updated = await campaignsApi.update(id, { ...payload, isActive: form.isActive });
         setUrl(updated.url);
         toast.success("Campaign updated");
+        navigate("/campaigns");
       } else {
         const created = await campaignsApi.create(payload);
         toast.success("Campaign created");
@@ -212,12 +214,12 @@ export const CampaignFormPage = () => {
                 id="maxDuration"
                 type="number"
                 min={1}
-                max={3600}
+                max={MAX_TESTIMONIAL_DURATION_SECONDS}
                 required
                 value={form.maxDuration}
                 onChange={(e) => setForm({ ...form, maxDuration: Number(e.target.value) })}
               />
-              <FieldHint>Up to 3600 seconds (1 hour). 120s is a good default.</FieldHint>
+              <FieldHint>Up to {MAX_TESTIMONIAL_DURATION_SECONDS} seconds (2 minutes). 120s is the maximum.</FieldHint>
             </div>
 
             {isEdit && (

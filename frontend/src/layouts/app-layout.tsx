@@ -35,6 +35,21 @@ const navItems = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
+const BrLandMark = ({ user }: { user?: { avatar_url: string | null } | null }) => {
+  if (user?.avatar_url) {
+    return (
+      <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+        <img src={user.avatar_url} alt="Company logo" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
+  return (
+    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+      <Quote className="h-4 w-4" />
+    </span>
+  );
+};
+
 const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -42,9 +57,7 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 border-b border-gray-100 px-6">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-          <Quote className="h-4 w-4" />
-        </span>
+        <BrLandMark user={user} />
         <span className="text-lg font-bold tracking-tight text-gray-900">Vouch</span>
       </div>
 
@@ -108,6 +121,7 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
 
 export const AppLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -119,9 +133,7 @@ export const AppLayout = () => {
       {/* Mobile header + drawer */}
       <div className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <Quote className="h-4 w-4" />
-          </span>
+          <BrLandMark user={user} />
           <span className="text-lg font-bold text-gray-900">Vouch</span>
         </div>
         <button

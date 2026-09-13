@@ -71,6 +71,10 @@ export const renderEmbedPlayer = (data: EmbedPlayerData): string => {
     text-align: center;
     white-space: pre-line;
     text-wrap: balance;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     opacity: 0;
     transition: opacity 0.18s ease, bottom 0.3s ease;
     pointer-events: none;
@@ -308,24 +312,58 @@ export const renderEmbedPlayer = (data: EmbedPlayerData): string => {
     return cues;
   }
 
-  var cues = [];
+  var WORDS_PER_CHUNK = 5;
+  var activeCues = [];
   var ccOn = false;
   var activeCue = -1;
+  var rafId = 0;
+
+  function buildWords(cues) {
+    return cues.map(function (cue) {
+      var words = cue.text.split(/\\s+/).filter(Boolean);
+      var perWord = words.length > 1 ? (cue.end - cue.start) / words.length : (cue.end - cue.start);
+      return { start: cue.start, end: cue.end, words: words, perWord: perWord || 0.3 };
+    });
+  }
 
   function syncCaptions() {
-    if (!cues.length) return;
+    if (!activeCues.length) return;
     var t = video.currentTime;
     var idx = -1;
-    for (var i = 0; i < cues.length; i++) {
-      if (t >= cues[i].start && t < cues[i].end) { idx = i; break; }
+    for (var i = 0; i < activeCues.length; i++) {
+      if (t >= activeCues[i].start && t < activeCues[i].end) { idx = i; break; }
     }
     if (idx === activeCue) return;
     activeCue = idx;
     if (ccOn && idx >= 0) {
-      captionEl.textContent = cues[idx].text;
+      captionEl.textContent = "";
       captionEl.classList.add("is-visible");
     } else {
       captionEl.classList.remove("is-visible");
+    }
+    renderChunk();
+  }
+
+  function renderChunk() {
+    if (!ccOn || activeCue < 0 || !captionEl.classList.contains("is-visible")) return;
+    var cue = activeCues[activeCue];
+    if (!cue || !cue.words.length) return;
+    var spoken = Math.min(
+      cue.words.length - 1,
+      Math.max(0, Math.floor((video.currentTime - cue.start) / cue.perWord))
+    );
+    var chunkStart = Math.max(0, spoken - Math.floor(WORDS_PER_CHUNK / 2));
+    captionEl.textContent = cue.words.slice(chunkStart, chunkStart + WORDS_PER_CHUNK).join(" ");
+  }
+
+  function captionLoop() {
+    if (ccOn && activeCue >= 0) {
+      renderChunk();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(captionLoop);
+    } else if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
     }
   }
 
@@ -334,8 +372,13 @@ export const renderEmbedPlayer = (data: EmbedPlayerData): string => {
     ccBtn.setAttribute("aria-pressed", String(on));
     try { localStorage.setItem("vouch-cc", on ? "on" : "off"); } catch (e) {}
     activeCue = -1;
-    if (!on) captionEl.classList.remove("is-visible");
+    if (!on) {
+      captionEl.classList.remove("is-visible");
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
     syncCaptions();
+    captionLoop();
   }
 
   if (CAPTIONS_AVAILABLE) {
@@ -343,8 +386,9 @@ export const renderEmbedPlayer = (data: EmbedPlayerData): string => {
       .then(function (res) { return res.ok ? res.text() : ""; })
       .then(function (text) {
         if (!text) return;
-        cues = parseVtt(text);
-        if (!cues.length) return;
+        var parsed = parseVtt(text);
+        if (!parsed.length) return;
+        activeCues = buildWords(parsed);
         ccBtn.hidden = false;
         var saved = null;
         try { saved = localStorage.getItem("vouch-cc"); } catch (e) {}
