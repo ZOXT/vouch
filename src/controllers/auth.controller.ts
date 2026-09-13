@@ -31,6 +31,9 @@ const cookieOptions = {
   // SameSite=None requires Secure, otherwise browsers reject the cookie
   secure: process.env.NODE_ENV === "production" || env.COOKIE_SAME_SITE === "none",
   sameSite: env.COOKIE_SAME_SITE,
+  // Optional shared domain (e.g. ".tryvouch.me") so the session is recognized
+  // on the apex and subdomains alike. Empty = host-only.
+  ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
 };
 
 const setAuthCookies = (res: Response, token: string, refreshToken: string) => {

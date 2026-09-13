@@ -6,6 +6,9 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("15m"),
   REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().int().positive().default(30),
   COOKIE_SAME_SITE: z.enum(["strict", "lax", "none"]).default("strict"),
+  // Optional cookie Domain so the session is shared across subdomains
+  // (e.g. ".tryvouch.me"). Empty string = host-only cookies.
+  COOKIE_DOMAIN: z.string().default(""),
   AWS_REGION: z.string().default("us-east-1"),
   AWS_BUCKET_NAME: z.string(),
   APP_URL: z.string(),

@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # Caddy routes for Vouch. Auto-provisions Let's Encrypt certs on first boot
-# (requires both A records to resolve to this instance's public IP).
+# (requires the A records to resolve to this instance's public IP).
 #
 # Top-level matcher syntax: `/pattern*` = exact + subtree at path prefix.
 # ---------------------------------------------------------------------------
@@ -33,4 +33,33 @@ app.tryvouch.me {
 api.tryvouch.me {
     reverse_proxy api:3000
     encode gzip
+}
+
+# Marketing apex: serves the shared SPA, but routes are narrowed client-side
+# to public pages (landing, pricing, privacy) with a redirect to app.*.
+tryvouch.me {
+    handle /api/* {
+        reverse_proxy api:3000
+    }
+    handle /health {
+        reverse_proxy api:3000
+    }
+    handle /embed.js {
+        reverse_proxy api:3000
+    }
+    handle /embed/* {
+        reverse_proxy api:3000
+    }
+
+    # Everything else -> SPA
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    encode gzip
+}
+
+# Canonicalize www -> apex.
+www.tryvouch.me {
+    redir https://tryvouch.me{uri} permanent
 }

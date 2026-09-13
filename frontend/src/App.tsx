@@ -11,6 +11,7 @@ import { ForgotPasswordPage } from "@/features/auth/pages/forgot-password-page";
 import { ResetPasswordPage } from "@/features/auth/pages/reset-password-page";
 import { AppLayout } from "@/layouts/app-layout";
 import { FullPageSpinner } from "@/components/ui/spinner";
+import { canonicalHostRedirect } from "@/lib/host";
 
 // Lazy-load the heavier dashboard areas for a fast initial bundle.
 const OverviewPage = lazy(() =>
@@ -118,9 +119,19 @@ function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>;
 }
 
-export const App = () => (
-  <AuthProvider>
-    <RouterProvider router={router} />
-    <Toaster position="bottom-right" richColors closeButton />
-  </AuthProvider>
-);
+export const App = () => {
+  // The dominant and app subdomain both serve this same bundle. Redirect the
+  // browser to the canonical host for the route (marketing apex vs app.*).
+  const redirect = canonicalHostRedirect();
+  if (redirect) {
+    window.location.replace(redirect);
+    return <FullPageSpinner />;
+  }
+
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <Toaster position="bottom-right" richColors closeButton />
+    </AuthProvider>
+  );
+};
