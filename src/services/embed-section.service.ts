@@ -25,13 +25,28 @@ interface CreateEmbedSectionRequest {
   theme?: EmbedTheme;
   testimonialIds: string[];
   captionsEnabled?: boolean;
+  showSummary?: boolean;
+  maxWidth?: number | null;
+  titleAlign?: "left" | "center";
 }
+
+const isTitleAlign = (value: unknown): value is "left" | "center" =>
+  value === "left" || value === "center";
 
 export const createEmbedSection = async (
   userId: string,
   input: CreateEmbedSectionRequest,
 ) => {
-  const { title, displayStyle, theme, testimonialIds, captionsEnabled } = input;
+  const {
+    title,
+    displayStyle,
+    theme,
+    testimonialIds,
+    captionsEnabled,
+    showSummary,
+    maxWidth,
+    titleAlign,
+  } = input;
 
   const cleanTitle = title?.trim();
 
@@ -48,6 +63,18 @@ export const createEmbedSection = async (
 
   if (theme !== undefined && !isEmbedTheme(theme)) {
     throw new ApiError(400, "Valid theme is required");
+  }
+
+  if (
+    maxWidth !== undefined &&
+    maxWidth !== null &&
+    (!Number.isInteger(maxWidth) || maxWidth < 240 || maxWidth > 2000)
+  ) {
+    throw new ApiError(400, "Max width must be between 240 and 2000 pixels");
+  }
+
+  if (titleAlign !== undefined && !isTitleAlign(titleAlign)) {
+    throw new ApiError(400, "Valid title alignment is required (left or center)");
   }
 
   if (
@@ -143,6 +170,12 @@ export const createEmbedSection = async (
 
         captions_enabled: captionsEnabled ?? true,
 
+        show_summary: showSummary ?? false,
+
+        max_width: maxWidth ?? null,
+
+        title_align: titleAlign ?? "left",
+
         allowed_domains: [],
 
         testimonials: {
@@ -224,6 +257,9 @@ export const getPublicEmbedSection = async (publicId: string) => {
       layout: true,
       theme: true,
       captions_enabled: true,
+      show_summary: true,
+      max_width: true,
+      title_align: true,
 
       testimonials: {
         orderBy: {
@@ -265,6 +301,9 @@ export const getPublicEmbedSection = async (publicId: string) => {
     layout: embedSection.layout,
     theme: embedSection.theme,
     captionsEnabled: embedSection.captions_enabled,
+    showSummary: embedSection.show_summary,
+    maxWidth: embedSection.max_width,
+    titleAlign: embedSection.title_align === "center" ? "center" : "left",
 
     testimonials: embedSection.testimonials.map(
       ({ position, testimonial }) => ({
@@ -291,6 +330,9 @@ interface UpdateEmbedSectionRequest {
   allowedDomains?: string[];
   isActive?: boolean;
   captionsEnabled?: boolean;
+  showSummary?: boolean;
+  maxWidth?: number | null;
+  titleAlign?: "left" | "center";
 }
 
 export const updateEmbedSection = async (
@@ -353,6 +395,27 @@ export const updateEmbedSection = async (
 
   if (input.captionsEnabled !== undefined) {
     updateData.captions_enabled = input.captionsEnabled;
+  }
+
+  if (input.showSummary !== undefined) {
+    updateData.show_summary = input.showSummary;
+  }
+
+  if (input.maxWidth !== undefined) {
+    if (
+      input.maxWidth !== null &&
+      (!Number.isInteger(input.maxWidth) || input.maxWidth < 240 || input.maxWidth > 2000)
+    ) {
+      throw new ApiError(400, "Max width must be between 240 and 2000 pixels");
+    }
+    updateData.max_width = input.maxWidth;
+  }
+
+  if (input.titleAlign !== undefined) {
+    if (!isTitleAlign(input.titleAlign)) {
+      throw new ApiError(400, "Valid title alignment is required (left or center)");
+    }
+    updateData.title_align = input.titleAlign;
   }
 
   if (input.testimonialIds !== undefined) {

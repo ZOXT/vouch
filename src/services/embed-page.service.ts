@@ -10,8 +10,10 @@ export interface EmbedWallData {
   layout: string;
   theme: string;
   captionsEnabled: boolean;
+  showSummary: boolean;
+  maxWidth: number | null;
+  titleAlign: "left" | "center";
   allowedDomains: string[];
-  searchPlaceholder: string;
   testimonials: {
     id: string;
     clientName: string;
@@ -36,19 +38,16 @@ export const getEmbedWallData = async (publicId: string): Promise<EmbedWallData>
     select: { allowed_domains: true },
   });
 
-  const firstIndustry =
-    section.testimonials.find((t) => t.industry)?.industry ?? null;
-
   return {
     publicId: section.publicId,
     title: section.title,
     layout: section.layout,
     theme: section.theme,
     captionsEnabled: section.captionsEnabled,
+    showSummary: section.showSummary,
+    maxWidth: section.maxWidth,
+    titleAlign: section.titleAlign === "center" ? "center" : "left",
     allowedDomains: record?.allowed_domains ?? [],
-    searchPlaceholder: firstIndustry
-      ? `Search ${firstIndustry} testimonials — try a topic like "ROI" or "support"`
-      : "Search testimonial highlights, topics, or people",
     testimonials: section.testimonials.map((testimonial) => ({
       id: testimonial.id,
       clientName: testimonial.clientName,
@@ -68,6 +67,9 @@ export interface EmbedWallPreviewInput {
   layout: string;
   theme: string;
   captionsEnabled?: boolean;
+  showSummary?: boolean;
+  maxWidth?: number | null;
+  titleAlign?: "left" | "center";
   testimonialIds: string[];
 }
 
@@ -101,18 +103,16 @@ export const previewEmbedWall = async (
   const byId = new Map(testimonials.map((t) => [t.id, t]));
   const ordered = uniqueIds.map((id) => byId.get(id)).filter((t) => t !== undefined);
 
-  const firstIndustry = ordered.find((t) => t.industry)?.industry ?? null;
-
   return {
     publicId: "preview",
     title: input.title?.trim() || null,
     layout: input.layout,
     theme: input.theme,
     captionsEnabled: input.captionsEnabled ?? true,
+    showSummary: input.showSummary ?? false,
+    maxWidth: input.maxWidth ?? null,
+    titleAlign: input.titleAlign === "center" ? "center" : "left",
     allowedDomains: [],
-    searchPlaceholder: firstIndustry
-      ? `Search ${firstIndustry} testimonials — try a topic like "ROI" or "support"`
-      : "Search testimonial highlights, topics, or people",
     testimonials: ordered.map((t) => ({
       id: t.id,
       clientName: t.client_name,

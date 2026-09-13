@@ -65,6 +65,9 @@ export const EmbedEditorPage = () => {
   const [layout, setLayout] = useState<EmbedLayout>("grid");
   const [theme, setTheme] = useState<EmbedTheme>("minimal");
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
+  const [titleAlign, setTitleAlign] = useState<"left" | "center">("left");
+  const [maxWidth, setMaxWidth] = useState<number | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [allowedDomains, setAllowedDomains] = useState("");
   const [publicId, setPublicId] = useState<string | null>(null);
@@ -92,6 +95,9 @@ export const EmbedEditorPage = () => {
         setLayout(embed.layout);
         setTheme(embed.theme);
         setCaptionsEnabled(embed.captions_enabled);
+        setShowSummary(embed.show_summary);
+        setTitleAlign(embed.title_align);
+        setMaxWidth(embed.max_width);
         setSelected(embed.testimonials.map((t) => t.testimonial.id));
         setAllowedDomains(embed.allowed_domains.join("\n"));
         setPublicId(embed.public_id);
@@ -114,12 +120,15 @@ export const EmbedEditorPage = () => {
         theme,
         testimonialIds: selected,
         captionsEnabled,
+        showSummary,
+        titleAlign,
+        maxWidth,
       });
       setPreviewHtml(result.html);
     } catch {
       setPreviewHtml((prev) => prev);
     }
-  }, [title, layout, theme, selected, captionsEnabled]);
+  }, [title, layout, theme, selected, captionsEnabled, showSummary, titleAlign, maxWidth]);
 
   useEffect(() => {
     if (previewTimer.current) window.clearTimeout(previewTimer.current);
@@ -167,6 +176,9 @@ export const EmbedEditorPage = () => {
           theme,
           testimonialIds: selected,
           captionsEnabled,
+          showSummary,
+          titleAlign,
+          maxWidth,
           allowedDomains: domains,
         });
         setPublicId(updated.public_id);
@@ -178,6 +190,9 @@ export const EmbedEditorPage = () => {
           theme,
           testimonialIds: selected,
           captionsEnabled,
+          showSummary,
+          titleAlign,
+          maxWidth,
         });
         toast.success("Embed created");
         navigate(`/embeds/${created.id}`, { replace: true });
@@ -306,6 +321,55 @@ export const EmbedEditorPage = () => {
                   <p className="text-xs text-gray-500">Show a CC toggle in the embed player</p>
                 </div>
                 <Switch checked={captionsEnabled} onCheckedChange={setCaptionsEnabled} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Show AI summary</p>
+                  <p className="text-xs text-gray-500">A short 2-line excerpt under each card</p>
+                </div>
+                <Switch checked={showSummary} onCheckedChange={setShowSummary} />
+              </div>
+
+              {(showSummary || Boolean(title.trim())) && (
+                <div>
+                  <Label>Heading alignment</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["left", "center"] as const).map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setTitleAlign(value)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2.5 text-sm font-medium capitalize transition-colors",
+                          titleAlign === value
+                            ? "border-brand-500 bg-brand-50 text-brand-700"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50",
+                        )}
+                        aria-pressed={titleAlign === value}
+                      >
+                        {value === "center" ? "Center" : "Left"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="max-width">Maximum width</Label>
+                <select
+                  id="max-width"
+                  value={maxWidth ?? ""}
+                  onChange={(e) => setMaxWidth(e.target.value === "" ? null : Number(e.target.value))}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="">Auto (full width)</option>
+                  <option value={640}>640px — compact column</option>
+                  <option value={800}>800px — narrow</option>
+                  <option value={960}>960px — default</option>
+                  <option value={1200}>1200px — wide</option>
+                </select>
+                <FieldHint>Constrain the widget and center it on your page.</FieldHint>
               </div>
 
               {isEdit && (

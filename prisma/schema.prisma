@@ -185,6 +185,9 @@ model EmbedSection {
   theme            String   @default("minimal")
   is_active        Boolean  @default(true)
   captions_enabled Boolean  @default(true)
+  show_summary     Boolean  @default(false)
+  max_width        Int?
+  title_align      String   @default("left")
   allowed_domains  String[]
   view_count       Int      @default(0)
   created_at       DateTime @default(now())

@@ -194,6 +194,9 @@ export interface EmbedSection {
   theme: EmbedTheme;
   is_active: boolean;
   captions_enabled: boolean;
+  show_summary: boolean;
+  max_width: number | null;
+  title_align: "left" | "center";
   allowed_domains: string[];
   view_count: number;
   created_at: string;

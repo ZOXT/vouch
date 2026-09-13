@@ -22,6 +22,9 @@ export const createEmbedSectionController = asyncHandler(
       testimonialIds,
       captionsEnabled,
       theme,
+      showSummary,
+      maxWidth,
+      titleAlign,
     } = req.body;
 
     const embedSection = await createEmbedSection(
@@ -32,6 +35,9 @@ export const createEmbedSectionController = asyncHandler(
         testimonialIds,
         captionsEnabled,
         theme,
+        showSummary,
+        maxWidth,
+        titleAlign,
       },
     );
 
@@ -54,6 +60,9 @@ export const previewEmbedSectionController = asyncHandler(async (req, res) => {
     layout: req.body.displayStyle,
     theme: req.body.theme ?? "minimal",
     captionsEnabled: req.body.captionsEnabled,
+    showSummary: req.body.showSummary,
+    maxWidth: req.body.maxWidth,
+    titleAlign: req.body.titleAlign,
     testimonialIds: req.body.testimonialIds,
   });
 

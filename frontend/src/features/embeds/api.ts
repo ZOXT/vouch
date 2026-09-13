@@ -7,6 +7,9 @@ export interface EmbedSectionInput {
   theme?: EmbedTheme;
   testimonialIds: string[];
   captionsEnabled?: boolean;
+  showSummary?: boolean;
+  maxWidth?: number | null;
+  titleAlign?: "left" | "center";
 }
 
 export interface EmbedSectionUpdateInput {
@@ -15,6 +18,9 @@ export interface EmbedSectionUpdateInput {
   theme?: EmbedTheme;
   testimonialIds?: string[];
   captionsEnabled?: boolean;
+  showSummary?: boolean;
+  maxWidth?: number | null;
+  titleAlign?: "left" | "center";
   allowedDomains?: string[];
   isActive?: boolean;
 }

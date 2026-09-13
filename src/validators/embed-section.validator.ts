@@ -3,6 +3,8 @@ import { z } from "zod";
 const layout = z.enum(["grid", "carousel", "list"]);
 const theme = z.enum(["minimal", "dark", "gradient", "editorial"]);
 const domain = z.string().trim().min(1).max(253);
+const titleAlign = z.enum(["left", "center"]);
+const maxWidth = z.number().int().min(240).max(2000).nullable();
 
 export const createEmbedSectionSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -10,6 +12,9 @@ export const createEmbedSectionSchema = z.object({
   theme: theme.optional(),
   testimonialIds: z.array(z.string().uuid()).min(1).max(100),
   captionsEnabled: z.boolean().optional(),
+  showSummary: z.boolean().optional(),
+  maxWidth: maxWidth.optional(),
+  titleAlign: titleAlign.optional(),
 });
 
 export const updateEmbedSectionSchema = z.object({
@@ -20,6 +25,9 @@ export const updateEmbedSectionSchema = z.object({
   allowedDomains: z.array(domain).max(50).optional(),
   isActive: z.boolean().optional(),
   captionsEnabled: z.boolean().optional(),
+  showSummary: z.boolean().optional(),
+  maxWidth: maxWidth.optional(),
+  titleAlign: titleAlign.optional(),
 });
 
 export const previewEmbedSectionSchema = z.object({
@@ -28,4 +36,7 @@ export const previewEmbedSectionSchema = z.object({
   theme: theme.optional(),
   testimonialIds: z.array(z.string().uuid()).min(1).max(100),
   captionsEnabled: z.boolean().optional(),
+  showSummary: z.boolean().optional(),
+  maxWidth: maxWidth.optional(),
+  titleAlign: titleAlign.optional(),
 });

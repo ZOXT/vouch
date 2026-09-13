@@ -16,7 +16,10 @@ const initialsOf = (name: string): string =>
     .map((part) => part[0]!.toUpperCase())
     .join("") || "?";
 
-const renderCard = (testimonial: EmbedWallData["testimonials"][number]): string => {
+const renderCard = (
+  testimonial: EmbedWallData["testimonials"][number],
+  showSummary: boolean,
+): string => {
   const name = escapeHtml(testimonial.clientName);
   const designation = testimonial.clientDesignation?.trim()
     ? `<span class="card__designation">${escapeHtml(testimonial.clientDesignation)}</span>`
@@ -28,18 +31,13 @@ const renderCard = (testimonial: EmbedWallData["testimonials"][number]): string 
     testimonial.durationSeconds != null
       ? `<span class="card__duration">${formatDuration(testimonial.durationSeconds)}</span>`
       : "";
-  const searchable = [
-    testimonial.clientName,
-    testimonial.clientDesignation,
-    testimonial.industry,
-    testimonial.summary,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+  const summary =
+    showSummary && testimonial.summary?.trim()
+      ? `<span class="card__summary" aria-hidden="true">${escapeHtml(testimonial.summary)}</span>`
+      : "";
 
   return `
-      <button type="button" class="card" data-id="${escapeHtml(testimonial.id)}" data-search="${escapeHtml(searchable)}" aria-label="Play video testimonial from ${name}">
+      <button type="button" class="card" data-id="${escapeHtml(testimonial.id)}" aria-label="Play video testimonial from ${name}">
         <span class="card__media">
           ${media}
           <span class="card__scrim" aria-hidden="true"></span>
@@ -55,6 +53,7 @@ const renderCard = (testimonial: EmbedWallData["testimonials"][number]): string 
             ${designation}
           </span>
         </span>
+        ${summary}
       </button>`;
 };
 
@@ -66,10 +65,14 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
     ? data.theme
     : "minimal";
   const title = data.title?.trim()
-    ? `<h2 class="wall__title">${escapeHtml(data.title)}</h2>`
+    ? `<h2 class="wall__title" data-align="${data.titleAlign === "center" ? "center" : "left"}">${escapeHtml(data.title)}</h2>`
     : "";
-  const cards = data.testimonials.map(renderCard).join("");
+  const cards = data.testimonials.map((t) => renderCard(t, data.showSummary)).join("");
   const publicIdJson = JSON.stringify(data.publicId);
+  const maxWidthStyle =
+    data.maxWidth != null
+      ? ` style="--wall-max-width:${data.maxWidth}px"`
+      : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -106,101 +109,21 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
     margin: 2px 4px 22px;
     color: var(--tg, #111827);
   }
-  .wall__search {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0 4px 18px;
-    padding: 10px 14px;
-    max-width: 420px;
-    border-radius: 999px;
-    border: 1px solid var(--vouch-card-border, #eceef2);
-    background: var(--vouch-card-bg, #fff);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .wall__search:focus-within {
-    border-color: var(--vouch-focus, rgba(79,70,229,0.6));
-    box-shadow: 0 0 0 3px var(--vouch-focus, rgba(79,70,229,0.4));
-  }
-  .wall__search svg {
-    flex: 0 0 auto;
-    width: 16px;
-    height: 16px;
-    color: var(--tm, #9ca3af);
-  }
-  .wall__search input {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: none;
-    background: transparent;
-    font: inherit;
-    font-size: 13.5px;
-    color: var(--tg, #111827);
-  }
-  .wall__search input::placeholder { color: var(--tm, #9ca3af); }
-  .wall__search-clear {
-    flex: 0 0 auto;
-    appearance: none;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    padding: 2px;
-    color: var(--tm, #9ca3af);
-    line-height: 0;
-    display: none;
-  }
-  .wall__search-clear svg { width: 14px; height: 14px; }
-  .wall__search.has-value .wall__search-clear { display: inline-flex; }
-  .wall__empty {
-    display: none;
-    position: relative;
-    z-index: 2;
-    margin: 12px 4px 4px;
-    padding: 28px 18px;
-    border-radius: var(--vouch-radius);
-    border: 1px dashed var(--vouch-card-border, #eceef2);
-    color: var(--tm, #6b7280);
-    font-size: 13.5px;
-    text-align: center;
-  }
-  .wall__items--filtered .card:not([data-match="true"]) { display: none; }
-  .wall.is-empty .wall__empty { display: block; }
-
-  /* Dark */
-  .wall[data-theme="dark"] .wall__search {
-    border-color: rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.06);
-  }
-  .wall[data-theme="dark"] .wall__search:focus-within {
-    border-color: rgba(165,180,252,0.6);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
-  }
-  .wall[data-theme="dark"] .wall__empty { border-color: rgba(255,255,255,0.16); color: #9ca3af; }
-  .wall[data-theme="gradient"] .wall__search {
-    border-color: rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.14);
-  }
-  .wall[data-theme="gradient"] .wall__search:focus-within {
-    border-color: #fff;
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
-  }
-  .wall[data-theme="gradient"] .wall__search svg { color: #fff; }
-  .wall[data-theme="gradient"] .wall__search input { color: #fff; }
-  .wall[data-theme="gradient"] .wall__search input::placeholder { color: rgba(255,255,255,0.7); }
-  .wall[data-theme="gradient"] .wall__search-clear { color: #fff; }
-  .wall[data-theme="gradient"] .wall__empty { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.85); }
-  .wall__items {
+  .wall__title[data-align="center"] { text-align: center; }
+  .wall__inner {
     position: relative;
     z-index: 1;
+    max-width: var(--wall-max-width, none);
+    margin: 0 auto;
+  }
+  .wall__items {
     display: flex;
     gap: 18px;
   }
   .wall__items--grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(235px, 300px));
+    justify-content: center;
   }
   .wall__items--carousel {
     overflow-x: auto;
@@ -391,10 +314,21 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .card__summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding: 6px 4px 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--tm, #6b7280);
+  }
 
   /* ---------- List overrides ---------- */
   .wall__items--list .card {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     gap: 16px;
     padding: 14px;
@@ -408,9 +342,11 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
   .wall__items--list .card__media { flex: 0 0 200px; aspect-ratio: 16 / 10; }
   .wall__items--list .card__footer { flex: 1; padding: 0; }
   .wall__items--list .card__name { font-size: 15px; }
+  .wall__items--list .card__summary { flex-basis: 100%; margin-left: 216px; }
   @media (max-width: 480px) {
     .wall__items--list .card { flex-direction: column; align-items: stretch; }
     .wall__items--list .card__media { flex: none; }
+    .wall__items--list .card__summary { margin-left: 0; }
   }
 
   /* ---------- THEMES ---------- */
@@ -546,7 +482,7 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
 </style>
 </head>
 <body>
-  <main class="wall" data-theme="${theme}">
+  <main class="wall" data-theme="${theme}"${maxWidthStyle}>
     <span class="wall__deco" aria-hidden="true">
       <span class="deco__orb deco__orb--1"></span>
       <span class="deco__orb deco__orb--2"></span>
@@ -561,16 +497,10 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
       <span class="deco__line deco__line--v"></span>
     </span>
     ${title}
-    <div class="wall__search" role="search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" class="wall__search-input" placeholder="${escapeHtml(data.searchPlaceholder)}" aria-label="Search testimonials" autocomplete="off">
-      <button type="button" class="wall__search-clear" aria-label="Clear search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
-    <p class="wall__empty" role="status">No testimonials match your search. Try a different word or topic.</p>
-    <div class="wall__items wall__items--${layout}">
-      ${cards}
+    <div class="wall__inner">
+      <div class="wall__items wall__items--${layout}">
+        ${cards}
+      </div>
     </div>
   </main>
 <script>
@@ -598,36 +528,6 @@ export const renderEmbedWall = (data: EmbedWallData): string => {
       );
     });
   });
-
-  var searchWrap = document.querySelector(".wall__search");
-  var searchInput = document.querySelector(".wall__search-input");
-  var clearBtn = document.querySelector(".wall__search-clear");
-  var items = document.querySelectorAll(".card");
-  var wall = document.querySelector(".wall");
-
-  function applySearch() {
-    var value = (searchInput.value || "").trim().toLowerCase();
-    var visible = 0;
-
-    searchWrap.classList.toggle("has-value", value.length > 0);
-
-    items.forEach(function (card) {
-      var match = value.length === 0 || (card.getAttribute("data-search") || "").indexOf(value) !== -1;
-      card.setAttribute("data-match", match ? "true" : "false");
-      if (match) visible++;
-    });
-
-    wall.classList.toggle("wall__items--filtered", value.length > 0 && visible !== items.length);
-    wall.classList.toggle("is-empty", value.length > 0 && visible === 0);
-  }
-
-  searchInput.addEventListener("input", applySearch);
-  clearBtn.addEventListener("click", function () {
-    searchInput.value = "";
-    applySearch();
-    searchInput.focus();
-  });
-  applySearch();
 })();
 </script>
 </body>
