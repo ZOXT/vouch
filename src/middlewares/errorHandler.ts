@@ -28,6 +28,27 @@ export const errorHandler = (
   }
 
 
+  if (
+    err instanceof SyntaxError &&
+    Object.prototype.hasOwnProperty.call(err, "type") &&
+    (err as { type?: string }).type === "entity.parse.failed"
+  ) {
+    logger.warn(
+      {
+        method: req.method,
+        url: req.originalUrl,
+        statusCode: 400,
+        message: err.message,
+      },
+      "API error"
+    );
+
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON body",
+    });
+  }
+
   logger.error(
     {
       err,
