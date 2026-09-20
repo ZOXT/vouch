@@ -486,18 +486,18 @@ export const LandingPage = () => {
                     >
                       <div
                         className={cn(
-                          "relative z-10 flex flex-col items-center sm:w-1/2",
+                          "relative z-10 flex w-full flex-row items-start gap-5 sm:w-1/2 sm:flex-col sm:gap-0",
                           right ? "sm:items-start sm:pl-12" : "sm:items-end sm:pr-12",
                         )}
                       >
-                        <div className="animate-grow-in flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-base font-bold text-white shadow-lg shadow-brand-600/25">
+                        <div className="animate-grow-in flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-600 text-base font-bold text-white shadow-lg shadow-brand-600/25">
                           {step.number}
                         </div>
-                        <div className="mt-5 sm:mt-6">
+                        <div className="min-w-0 flex-1 sm:mt-6">
                           <h3 className="font-display text-xl font-bold text-gray-900">
                             {step.title}
                           </h3>
-                          <p className="mt-2 max-w-xs text-gray-600 leading-relaxed">
+                          <p className="mt-2 max-w-none leading-relaxed text-gray-600 sm:max-w-xs">
                             {step.description}
                           </p>
                         </div>
