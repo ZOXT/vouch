@@ -5,7 +5,7 @@ const LAST_UPDATED = "September 13, 2026";
 
 export const RefundsPage = () => (
   <div className="min-h-screen bg-white">
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -30,25 +30,25 @@ export const RefundsPage = () => (
               Paddle
             </a>
             . We want you to be happy with Vouch. If you are not, you may request a refund within
-            fourteen (14) days of the initial purchase as described below. This policy supplements —
-            and does not replace — any consumer protections granted by applicable law.
+            fourteen (14) days of the initial purchase as described below. This policy supplements,
+            and does not replace, any consumer protections granted by applicable law.
           </p>
         </Section>
 
         <Section id="eligibility" title="2. When you can get a refund">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">First purchase</span> — if Vouch does not meet your
+              <span className="font-medium">First purchase</span>: if Vouch does not meet your
               needs, you may request a full refund within 14 days of your first purchase. After this
               window, fees are non-refundable unless required by law.
             </li>
             <li>
-              <span className="font-medium">Automatic renewals</span> — if you were charged for a
+              <span className="font-medium">Automatic renewals</span>: if you were charged for a
               renewal you did not want and notify us within 14 days of the renewal charge, we will
               refund it and cancel your subscription.
             </li>
             <li>
-              <span className="font-medium">Duplicate or erroneous charges</span> — we will refund
+              <span className="font-medium">Duplicate or erroneous charges</span>: we will refund
               any charge made by mistake or in error, in full, as soon as it is identified.
             </li>
           </ul>

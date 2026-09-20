@@ -31,7 +31,7 @@ export const PricingPage = () => {
   const currentPlan: Plan = subscription?.plan ?? "free";
 
   // Best-effort country detection (server uses proxied IP headers; Paddle
-  // auto-detects when absent — we never pass a sentinel).
+  // auto-detects when absent, we never pass a sentinel).
   useEffect(() => {
     billingApi
       .getCountry()
@@ -126,7 +126,7 @@ export const PricingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Shared top nav (mirrors the landing page) */}
-      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -191,7 +191,7 @@ export const PricingPage = () => {
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-gray-600">
                 Start free, upgrade when you&apos;re ready. The Pro plan unlocks unlimited
-                testimonials — so you never hit a wall on the thing that matters most.
+                testimonials, so you never hit a wall on the thing that matters most.
               </p>
 
               <div className="mt-8 inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm">
@@ -284,7 +284,7 @@ export const PricingPage = () => {
                     <p className="text-xs text-gray-400">{preview.currency}</p>
                   ) : (
                     <p className="text-xs text-gray-400">
-                      Billed yearly — that&apos;s $29/month
+                      Billed yearly (that&apos;s $29/month)
                     </p>
                   )}
 

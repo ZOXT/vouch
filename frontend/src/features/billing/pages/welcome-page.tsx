@@ -18,7 +18,7 @@ export const WelcomePage = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-brand-50 via-white to-indigo-50">
-      <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+      <nav className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -45,8 +45,8 @@ export const WelcomePage = () => {
             )}
           >
             {plan
-              ? `Your ${PLAN_LABELS[plan]} plan is active — unlimited testimonials, campaigns, and embed sections are unlocked.`
-              : "Your subscription is being activated. This usually takes a few seconds — check back shortly."}
+              ? `Your ${PLAN_LABELS[plan]} plan is active. Unlimited testimonials, campaigns, and embed sections are unlocked.`
+              : "Your subscription is being activated. This usually takes a few seconds. Check back shortly."}
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-3">

@@ -5,7 +5,7 @@ const LAST_UPDATED = "September 13, 2026";
 
 export const TermsPage = () => (
   <div className="min-h-screen bg-white">
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -72,23 +72,23 @@ export const TermsPage = () => (
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">Payment processing</span> — all payments are handled by{" "}
+              <span className="font-medium">Payment processing</span>: all payments are handled by{" "}
               <a href="https://www.paddle.com" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700">
                 Paddle
               </a>
               . We do not store credit-card numbers, bank details, or other financial credentials.
             </li>
             <li>
-              <span className="font-medium">Renewals</span> — subscriptions renew automatically at
+              <span className="font-medium">Renewals</span>: subscriptions renew automatically at
               the end of each billing period until cancelled.
             </li>
             <li>
-              <span className="font-medium">Cancellation</span> — you may cancel at any time from
+              <span className="font-medium">Cancellation</span>: you may cancel at any time from
               your billing settings. Cancellation takes effect at the end of the current billing
               period; you retain access through the end of the period you paid for.
             </li>
             <li>
-              <span className="font-medium">Refunds</span> — refunds are issued at our discretion in
+              <span className="font-medium">Refunds</span>: refunds are issued at our discretion in
               accordance with Paddle's refund policies. See our{" "}
               <Link to="/refunds" className="text-brand-600 hover:text-brand-700">
                 Refund Policy
@@ -96,7 +96,7 @@ export const TermsPage = () => (
               . Fees paid are non-refundable except where required by law.
             </li>
             <li>
-              <span className="font-medium">Price changes</span> — we may change plan prices or
+              <span className="font-medium">Price changes</span>: we may change plan prices or
               introduce new fees. We will provide reasonable notice before a price change takes
               effect, and it will apply from your next billing period.
             </li>
@@ -110,25 +110,25 @@ export const TermsPage = () => (
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">Consent</span> — Submitters must actively consent, via a
+              <span className="font-medium">Consent</span>: Submitters must actively consent, via a
               checkbox at submission, to their testimonial (including name, image, and recorded
               words) being collected, processed, and potentially published by the Owner. Vouch
               records this consent and will not accept a submission without it.
             </li>
             <li>
-              <span className="font-medium">Ownership and responsibility</span> — you retain all
+              <span className="font-medium">Ownership and responsibility</span>: you retain all
               rights to User Content you provide. You are solely responsible for it and represent
               that you own it or have the rights to share it, and that it does not infringe any
               third-party rights.
             </li>
             <li>
-              <span className="font-medium">License to Vouch</span> — to operate the platform, you
+              <span className="font-medium">License to Vouch</span>: to operate the platform, you
               grant us a limited license to host, store, transmit, process (including AI processing
               described in Section 6), and display User Content to the extent needed to provide the
               service you request. This license does not grant us any ownership in your content.
             </li>
             <li>
-              <span className="font-medium">Owner responsibility</span> — you are responsible for
+              <span className="font-medium">Owner responsibility</span>: you are responsible for
               how you collect, use, and publish testimonials, including obtaining any further
               consents required by your jurisdiction and honoring submitter requests to remove
               content.
@@ -234,8 +234,8 @@ export const TermsPage = () => (
             <Link to="/privacy" className="text-brand-600 hover:text-brand-700">
               Privacy Policy
             </Link>
-            . Sections that by their nature should survive termination — including Sections 9
-            through 13 — will survive.
+            . Sections that by their nature should survive termination, including Sections 9
+            through 13, will survive.
           </p>
         </Section>
 

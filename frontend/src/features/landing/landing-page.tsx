@@ -86,7 +86,7 @@ const STEPS = [
     number: 2,
     title: "Share & Collect",
     description:
-      "Send one link to your clients. They record a short video or write text on any device — no signup needed.",
+      "Send one link to your clients. They record a short video or write text on any device, no signup needed.",
   },
   {
     number: 3,
@@ -257,7 +257,7 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white">
-      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -384,7 +384,7 @@ export const LandingPage = () => {
             <SampleEmbed />
             <p className="animate-float mt-20 flex items-center justify-center gap-2 text-sm font-medium text-gray-500">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              Drop this on any page — it just works
+              Drop this on any page, it just works
             </p>
           </Reveal>
 

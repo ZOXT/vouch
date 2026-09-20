@@ -5,7 +5,7 @@ const LAST_UPDATED = "September 7, 2026";
 
 export const PrivacyPage = () => (
   <div className="min-h-screen bg-white">
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
@@ -27,7 +27,7 @@ export const PrivacyPage = () => (
           <p>
             Vouch ("we", "us", "our") is a testimonial collection and management platform operated from
             tryvouch.me. This Privacy Policy explains what personal data we collect, how we use it,
-            and the choices you have — whether you are a registered account holder ("Owner") or someone
+            and the choices you have, whether you are a registered account holder ("Owner") or someone
             who submits a testimonial through a Vouch-powered form or campaign ("Submitter").
           </p>
           <p>
@@ -69,7 +69,7 @@ export const PrivacyPage = () => (
             </a>
             . We do not store credit-card numbers, bank details, or other financial credentials on
             our servers. Paddle provides us with a customer ID, subscription status, plan, and billing
-            period — data necessary to manage your subscription.
+            period, data necessary to manage your subscription.
           </p>
 
           <h3 className="text-lg font-semibold text-gray-900">2.5 Usage data</h3>
@@ -83,8 +83,8 @@ export const PrivacyPage = () => (
         <Section id="how-data-is-used" title="3. How we use your data">
           <ul className="list-disc space-y-2 pl-5">
             <li>To provide, operate, and improve the Vouch platform.</li>
-            <li>To process uploaded videos — including AI-powered transcription, captioning, sentiment
-              analysis, and indexing — and make them available to the account Owner who requested the
+            <li>To process uploaded videos, including AI-powered transcription, captioning, sentiment
+              analysis, and indexing, and make them available to the account Owner who requested the
               testimonial.</li>
             <li>To send transactional email notifications (for example, OTP verification, account
               alerts, and testimonial-received confirmations).</li>
@@ -105,21 +105,21 @@ export const PrivacyPage = () => (
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">Consent</span> — Submitters explicitly consent to the
+              <span className="font-medium">Consent</span>: Submitters explicitly consent to the
               publication of their testimonial by checking the consent checkbox at submission. Owners
               consent to processing when they create an account.
             </li>
             <li>
-              <span className="font-medium">Contract</span> — processing is necessary to provide the
+              <span className="font-medium">Contract</span>: processing is necessary to provide the
               Vouch service you signed up for.
             </li>
             <li>
-              <span className="font-medium">Legitimate interest</span> — for platform security,
+              <span className="font-medium">Legitimate interest</span>: for platform security,
               fraud prevention, and operational monitoring, where these interests are not overridden
               by your rights.
             </li>
             <li>
-              <span className="font-medium">Legal obligation</span> — where we are required by law
+              <span className="font-medium">Legal obligation</span>: where we are required by law
               to retain or disclose information.
             </li>
           </ul>
@@ -132,27 +132,27 @@ export const PrivacyPage = () => (
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">AWS S3 and CloudFront</span> — video, audio, thumbnail,
+              <span className="font-medium">AWS S3 and CloudFront</span>: video, audio, thumbnail,
               and caption file storage and content delivery.
             </li>
             <li>
-              <span className="font-medium">Supabase</span> — PostgreSQL database hosting.
+              <span className="font-medium">Supabase</span>: PostgreSQL database hosting.
             </li>
             <li>
-              <span className="font-medium">Paddle</span> — payment processing and subscription
+              <span className="font-medium">Paddle</span>: payment processing and subscription
               management.
             </li>
             <li>
-              <span className="font-medium">Groq</span> — AI-powered transcription and testimonial
+              <span className="font-medium">Groq</span>: AI-powered transcription and testimonial
               analysis. Video/audio content is transmitted to Groq solely for generating the
               transcript and analysis; Groq does not retain it beyond the processing call.
             </li>
             <li>
-              <span className="font-medium">Redis</span> — job queue processing for background
+              <span className="font-medium">Redis</span>: job queue processing for background
               media tasks.
             </li>
             <li>
-              <span className="font-medium">Resend</span> — transactional email delivery.
+              <span className="font-medium">Resend</span>: transactional email delivery.
             </li>
           </ul>
           <p>
@@ -169,12 +169,12 @@ export const PrivacyPage = () => (
         <Section id="retention" title="6. Data retention">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <span className="font-medium">Account data</span> — retained while the account is
+              <span className="font-medium">Account data</span>: retained while the account is
               active. Upon account deletion, personal data is removed within 30 days except where we
               are legally required to retain it longer.
             </li>
             <li>
-              <span className="font-medium">Testimonials</span> — retained until the account Owner
+              <span className="font-medium">Testimonials</span>: retained until the account Owner
               deletes them. Submitters may request removal by contacting{" "}
               <a href="mailto:hello@tryvouch.me" className="text-brand-600 hover:text-brand-700">
                 hello@tryvouch.me
@@ -182,11 +182,11 @@ export const PrivacyPage = () => (
               .
             </li>
             <li>
-              <span className="font-medium">Server logs</span> — rotated and purged on a rolling
+              <span className="font-medium">Server logs</span>: rotated and purged on a rolling
               90-day cycle.
             </li>
             <li>
-              <span className="font-medium">Payment records</span> — retained for 7 years as
+              <span className="font-medium">Payment records</span>: retained for 7 years as
               required for tax and accounting purposes (handled by Paddle).
             </li>
           </ul>
@@ -213,7 +213,7 @@ export const PrivacyPage = () => (
             <li>Correct inaccurate data.</li>
             <li>Request deletion of your data.</li>
             <li>Restrict or object to certain processing.</li>
-            <li>Data portability — receive your data in a structured, machine-readable format.</li>
+            <li>Data portability: receive your data in a structured, machine-readable format.</li>
             <li>Withdraw consent at any time (this does not affect processing that already took place).</li>
           </ul>
           <p>
