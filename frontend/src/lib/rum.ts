@@ -8,7 +8,7 @@ try {
     telemetries: ["performance","errors","http"] ,
     allowCookies: true ,
     enableXRay: false ,
-    signing: true // If you have a public resource policy and wish to send unsigned requests please set this to false
+    signing: false // If you have a public resource policy and wish to send unsigned requests please set this to false
   };
 
   const APPLICATION_ID: string = "ede893f2-1258-459e-aec5-483951d2dfb8";
@@ -18,4 +18,4 @@ try {
   new AwsRum(APPLICATION_ID, APPLICATION_VERSION, APPLICATION_REGION, config);
 } catch (error) {
   // Ignore errors thrown during CloudWatch RUM web client initialization
-}
+}   
