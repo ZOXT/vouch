@@ -27,7 +27,7 @@ export const ResetPasswordPage = () => {
     try {
       await authApi.resetPassword(token, password);
       setDone(true);
-      toast.success("Password updated — you can now sign in");
+      toast.success("Password updated. You can now sign in");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {

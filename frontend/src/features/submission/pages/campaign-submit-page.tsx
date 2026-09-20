@@ -152,7 +152,7 @@ export const CampaignSubmitPage = () => {
                 )}
                 {tooLong && (
                   <p className="text-sm text-amber-600">
-                    This video is longer than the {effectiveMax}s limit. Videos can be up to 2 minutes long — please trim it or record a shorter one.
+                    This video is longer than the {effectiveMax}s limit. Videos can be up to 2 minutes long, please trim it or record a shorter one.
                   </p>
                 )}
               </>
@@ -190,8 +190,8 @@ export const CampaignSubmitPage = () => {
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
               <span className="text-sm leading-relaxed text-gray-700">
-                I grant the business owner permission to publish and display this testimonial — including
-                my name, role, and likeness — on their website and in their marketing materials. I
+                I grant the business owner permission to publish and display this testimonial, including
+                my name, role, and likeness, on their website and in their marketing materials. I
                 understand I can request removal at any time by contacting{" "}
                 <span className="font-medium">hello@tryvouch.me</span>.
               </span>

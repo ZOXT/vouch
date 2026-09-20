@@ -15,7 +15,7 @@ export const renderEmbedPlayer = (data: EmbedPlayerData): string => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${name} — Video testimonial</title>
+<title>${name} | Video testimonial</title>
 <style>
   :root {
     --vouch-accent: #4f46e5;

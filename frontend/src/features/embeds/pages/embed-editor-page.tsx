@@ -364,10 +364,10 @@ export const EmbedEditorPage = () => {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 >
                   <option value="">Auto (full width)</option>
-                  <option value={640}>640px — compact column</option>
-                  <option value={800}>800px — narrow</option>
-                  <option value={960}>960px — default</option>
-                  <option value={1200}>1200px — wide</option>
+                  <option value={640}>640px, compact column</option>
+                  <option value={800}>800px, narrow</option>
+                  <option value={960}>960px, default</option>
+                  <option value={1200}>1200px, wide</option>
                 </select>
                 <FieldHint>Constrain the widget and center it on your page.</FieldHint>
               </div>

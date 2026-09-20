@@ -159,7 +159,7 @@ export const RequestSubmitPage = () => {
               />
               <span className="text-sm leading-relaxed text-gray-700">
                 I grant <span className="font-medium">{info?.companyName ?? "the business owner"}</span> permission
-                to publish and display this testimonial — including my name, role, and likeness — on their
+                to publish and display this testimonial, including my name, role, and likeness, on their
                 website and in their marketing materials. I understand I can request removal at any time by
                 contacting <span className="font-medium">hello@tryvouch.me</span>.
               </span>

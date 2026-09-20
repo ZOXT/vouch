@@ -38,7 +38,7 @@ const layout = (preheader: string, content: string): string => `<!doctype html>
         <tr>
           <td style="padding:20px 8px 0;text-align:center;">
             <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#9ca3af;line-height:1.6;">
-              Vouch — collect testimonials that convert<br>
+              Vouch | collect testimonials that convert<br>
               <a href="https://tryvouch.me" style="color:#9ca3af;text-decoration:underline;">tryvouch.me</a>
             </p>
           </td>
@@ -105,7 +105,7 @@ export const testimonialRequestTemplate = (
     `${input.ownerName} is asking for a quick video testimonial`,
     `${heading("We'd love your feedback")}
      ${paragraph(`Hi ${clientName},`)}
-     ${paragraph(`<strong>${ownerName}</strong> is collecting testimonials and would really appreciate a short video from you. It only takes a couple of minutes — just click below and record.`)}
+     ${paragraph(`<strong>${ownerName}</strong> is collecting testimonials and would really appreciate a short video from you. It only takes a couple of minutes. Just click below and record.`)}
      ${customMessage}
      ${button(input.requestUrl, "Record your testimonial")}
      ${muted(`If the button doesn't work, paste this link into your browser:<br><a href="${input.requestUrl}" style="color:${ACCENT};word-break:break-all;">${input.requestUrl}</a>`)}
@@ -140,7 +140,7 @@ export const testimonialReceivedTemplate = (
     `New testimonial from ${input.clientName}`,
     `${heading("You received a new testimonial 🎉")}
      ${paragraph(`Hi ${ownerName},`)}
-     ${paragraph(`<strong>${clientName}</strong>${designation} just submitted a video testimonial${input.source === "campaign" ? " to your campaign" : ""}. It's being processed now — captions and insights will be ready shortly.`)}
+     ${paragraph(`<strong>${clientName}</strong>${designation} just submitted a video testimonial${input.source === "campaign" ? " to your campaign" : ""}. It's being processed now. Captions and insights will be ready shortly.`)}
      ${button(input.dashboardUrl, "View in your dashboard")}`,
   );
 
@@ -161,7 +161,7 @@ export const passwordChangedTemplate = (
     `${heading("Your password was changed")}
      ${paragraph(`Hi ${name},`)}
      ${paragraph(`This is a confirmation that your Vouch account password was changed successfully on <strong>${new Date().toUTCString()}</strong>.`)}
-     ${paragraph(`If you just did this, you can ignore this email — no further action is needed.`)}
+     ${paragraph(`If you just did this, you can ignore this email. No further action is needed.`)}
      ${muted(`If you didn't make this change, please contact us right away at <a href="mailto:support@tryvouch.me" style="color:${ACCENT};">support@tryvouch.me</a>.`)}`,
   );
 
