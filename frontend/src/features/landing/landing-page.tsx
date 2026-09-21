@@ -338,8 +338,14 @@ export const LandingPage = () => {
       </nav>
 
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-indigo-50">
-        <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 top-40 h-72 w-72 rounded-full bg-indigo-200/40 blur-3xl" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle 18rem at 0% 30%, rgb(199 210 254 / 0.5), transparent 70%), radial-gradient(circle 18rem at 100% 45%, rgb(165 180 252 / 0.45), transparent 70%)",
+          }}
+        />
 
         <div className="mx-auto max-w-7xl px-4 pb-20 pt-20 sm:px-6 sm:pb-28 sm:pt-28 lg:px-8">
           <div className="animate-fade-in mx-auto max-w-4xl text-center">
