@@ -166,18 +166,25 @@ const SampleEmbed = () => (
     <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
       {/* Featured video card */}
       <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-600 via-indigo-600 to-indigo-800 p-5 sm:col-span-2 sm:p-7">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle 10rem at 100% 0%, rgb(255 255 255 / 0.12), transparent 70%)",
+          }}
+        />
         <div className="flex items-center justify-between gap-4">
           <div className="relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur transition-transform group-hover:scale-110">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:scale-110">
               <Play className="h-5 w-5 translate-x-0.5 fill-white text-white" />
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">
+            <span className="inline-flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white">
               <Captions className="h-3 w-3" /> CC
             </span>
-            <span className="rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">
+            <span className="rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white">
               00:24
             </span>
           </div>
@@ -397,7 +404,7 @@ export const LandingPage = () => {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {CAPABILITIES.map((item, index) => (
               <Reveal key={item.label} delay={index * 80} className={cn(index >= 4 && "sm:col-span-2 lg:col-span-1")}>
-                <div className="flex h-full items-center gap-2.5 rounded-xl border border-gray-200 bg-white/70 px-4 py-3 backdrop-blur">
+                <div className="flex h-full items-center gap-2.5 rounded-xl border border-gray-200 bg-white/70 px-4 py-3">
                   <item.icon className="h-4 w-4 shrink-0 text-brand-600" />
                   <span className="text-xs font-medium text-gray-600">{item.label}</span>
                 </div>
@@ -600,8 +607,14 @@ export const LandingPage = () => {
       </section>
 
       <section className="relative overflow-hidden bg-gradient-to-r from-brand-600 to-brand-800 py-24 sm:py-28">
-        <div className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle 16rem at 0% 100%, rgb(255 255 255 / 0.12), transparent 70%), radial-gradient(circle 16rem at 100% 0%, rgb(255 255 255 / 0.12), transparent 70%)",
+          }}
+        />
 
         <div className="animate-fade-in mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
