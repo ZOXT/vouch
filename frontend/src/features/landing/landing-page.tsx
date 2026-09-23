@@ -6,7 +6,6 @@ import {
   Code,
   Megaphone,
   Sparkles,
-  Star,
   Play,
   ArrowRight,
   Check,
@@ -17,11 +16,14 @@ import {
   LayoutDashboard,
   LogOut,
   ChevronDown,
+  Mail,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { Avatar } from "@/components/avatar";
 import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/utils";
+import person1 from "./assets/person-1.webp";
+import person2 from "./assets/person-2.webp";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -139,7 +141,7 @@ const FOOTER_LINKS = {
   Company: [
     { label: "About", href: "#" },
     { label: "Blog", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "Contact", href: "mailto:hello@tryvouch.me" },
   ],
   Legal: [
     { label: "Privacy", to: "/privacy" },
@@ -148,8 +150,105 @@ const FOOTER_LINKS = {
   ],
 } as const;
 
+type EmbedCardProps = {
+  name: string;
+  designation: string;
+  summary: string;
+  duration: string;
+  initials: string;
+  src?: string;
+  className?: string;
+};
+
+const EmbedCard = ({ name, designation, summary, duration, initials, src, className }: EmbedCardProps) => (
+  <button
+    type="button"
+    className={cn(
+      "group flex w-full flex-col overflow-hidden text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
+      className,
+    )}
+  >
+    <span className="relative block aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br from-brand-100 via-brand-200 to-brand-300/60">
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_26%] transition-transform duration-500 group-hover:scale-[1.07]"
+        />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white/20">
+          {initials}
+        </span>
+      )}
+      <span
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-t from-gray-950/40 to-transparent"
+      />
+      <span
+        aria-hidden
+        className="absolute left-1/2 top-1/2 flex h-[54px] w-[54px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gray-900/85 text-white shadow-[0_8px_30px_rgba(8,8,12,0.35)] transition-transform duration-300 group-hover:scale-110"
+      >
+        <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
+      </span>
+      <span className="absolute bottom-3 right-3 rounded-full bg-gray-950/70 px-3 py-0.5 text-[11.5px] font-semibold text-white backdrop-blur">
+        {duration}
+      </span>
+    </span>
+
+    <span className="flex items-center gap-2.5 px-1 pt-3">
+      <span className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600">
+        {initials}
+      </span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-sm font-semibold text-gray-900">{name}</span>
+        <span className="truncate text-xs text-gray-500">{designation}</span>
+      </span>
+    </span>
+    <span className="line-clamp-2 px-1 pt-1.5 text-xs leading-relaxed text-gray-500">
+      {summary}
+    </span>
+  </button>
+);
+
+const SAMPLE_EMBED_CARDS = [
+  {
+    name: "Sarah Mitchell",
+    designation: "Head of Product, Nimbus",
+    summary: "Switched 90% of case-study sourcing to video. Setup took under five minutes.",
+    duration: "0:42",
+    initials: "SM",
+    src: person1,
+  },
+  {
+    name: "Marcus Webb",
+    designation: "COO, Brightline",
+    summary: "Auto-captions turn sales calls into highlight clips for the site in minutes.",
+    duration: "0:58",
+    initials: "MW",
+    src: "https://images.unsplash.com/photo-1758598497528-d8d9b3f22894?w=640&h=400&fit=crop&crop=faces&fm=jpg&q=70",
+  },
+  {
+    name: "Tom Alvarez",
+    designation: "CEO, Paperplane",
+    summary: "One link to collect, AI to transcribe. Publishing the wall took an afternoon.",
+    duration: "0:51",
+    initials: "TA",
+    src: person2,
+  },
+  {
+    name: "Jordan Ellis",
+    designation: "Founder, Frame & Co",
+    summary: "The AI summaries give our sales team talking points without watching every clip.",
+    duration: "0:37",
+    initials: "JE",
+    src: "https://images.unsplash.com/photo-1758874572744-26aa02a8f5c0?w=640&h=400&fit=crop&crop=faces&fm=jpg&q=70",
+  },
+];
+
 const SampleEmbed = () => (
-  <div className="animate-grow-in relative mx-auto mt-16 max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-brand-900/10">
+  <div className="animate-grow-in relative mx-auto mt-16 max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-brand-900/10">
     {/* Browser chrome */}
     <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3">
       <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
@@ -163,70 +262,35 @@ const SampleEmbed = () => (
       </span>
     </div>
 
-    <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
-      {/* Featured video card */}
-      <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-600 via-indigo-600 to-indigo-800 p-5 sm:col-span-2 sm:p-7">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle 10rem at 100% 0%, rgb(255 255 255 / 0.12), transparent 70%)",
-          }}
-        />
-        <div className="flex items-center justify-between gap-4">
-          <div className="relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:scale-110">
-              <Play className="h-5 w-5 translate-x-0.5 fill-white text-white" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white">
-              <Captions className="h-3 w-3" /> CC
-            </span>
-            <span className="rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white">
-              00:24
-            </span>
-          </div>
-        </div>
-        <div className="mt-8 space-y-1.5">
-          <div className="h-2 w-3/4 rounded-full bg-white/30" />
-          <div className="h-2 w-2/3 rounded-full bg-white/20" />
-          <div className="h-2 w-1/2 rounded-full bg-white/10" />
-        </div>
-        <p className="mt-4 text-sm font-medium text-white/80">
-          Generated captions appear here as they speak.
-        </p>
-      </div>
+    {/* The real embed wall, minimal theme */}
+    <div
+      className="relative overflow-hidden rounded-b-2xl px-6 py-8 sm:px-9 sm:py-10"
+      style={{
+        background: "radial-gradient(120% 90% at 12% 0%, #ffffff 0%, #f7f7ff 55%, #eef1fb 100%)",
+      }}
+    >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-6 top-1 font-serif text-7xl font-bold text-brand-300/90 select-none"
+      >
+        &ldquo;
+      </span>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-2 right-5 font-serif text-6xl font-bold text-brand-300/90 select-none"
+      >
+        &rdquo;
+      </span>
 
-      {/* Text cards */}
-      {[
-        { name: "A", initials: "AC", color: "bg-brand-100 text-brand-700" },
-        { name: "B", initials: "MR", color: "bg-indigo-100 text-indigo-700" },
-        { name: "C", initials: "EP", color: "bg-emerald-100 text-emerald-700" },
-      ].map((card) => (
-        <div key={card.name} className="rounded-xl border border-gray-200 bg-white p-5 shadow-card">
-          <div className="mb-2 flex gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-            ))}
-          </div>
-          <div className="space-y-1.5">
-            <div className="h-2 w-full rounded-full bg-gray-200" />
-            <div className="h-2 w-11/12 rounded-full bg-gray-200" />
-            <div className="h-2 w-4/6 rounded-full bg-gray-200" />
-          </div>
-          <div className="mt-4 flex items-center gap-2.5">
-            <div className={cn("flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold", card.color)}>
-              {card.initials}
-            </div>
-            <div className="space-y-1">
-              <div className="h-1.5 w-16 rounded-full bg-gray-300" />
-              <div className="h-1.5 w-12 rounded-full bg-gray-200" />
-            </div>
-          </div>
-        </div>
-      ))}
+      <h3 className="relative mb-6 px-1 text-xl font-bold tracking-tight text-gray-900">
+        What your customers say
+      </h3>
+
+      <div className="relative flex flex-wrap justify-center gap-4 sm:gap-5">
+        {SAMPLE_EMBED_CARDS.map((card) => (
+          <EmbedCard key={card.name} {...card} className="w-[300px] flex-none" />
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -683,8 +747,15 @@ export const LandingPage = () => {
             ))}
           </div>
 
-          <div className="mt-12 border-t border-gray-100 pt-8 text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Vouch. All rights reserved.
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-8 text-sm text-gray-400 sm:flex-row">
+            <p>&copy; {new Date().getFullYear()} Vouch. All rights reserved.</p>
+            <a
+              href="mailto:hello@tryvouch.me"
+              className="inline-flex items-center gap-2 transition-colors hover:text-gray-600"
+            >
+              <Mail className="h-4 w-4" />
+              hello@tryvouch.me
+            </a>
           </div>
         </div>
       </footer>
