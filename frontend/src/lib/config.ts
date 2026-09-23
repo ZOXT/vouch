@@ -22,3 +22,11 @@ export const PADDLE_ENV: "sandbox" | "production" =
   (import.meta.env.VITE_PADDLE_ENV as "sandbox" | "production" | undefined) ?? "sandbox";
 
 export const PADDLE_CLIENT_TOKEN: string = import.meta.env.VITE_PADDLE_CLIENT_TOKEN ?? "";
+
+/**
+ * Hero demo video served from CloudFront. Falls back to the production asset;
+ * set VITE_HERO_VIDEO_URL to override locally.
+ */
+export const HERO_VIDEO_URL: string =
+  import.meta.env.VITE_HERO_VIDEO_URL ??
+  "https://d39vxu4dkv06bd.cloudfront.net/vouch-hero-demo.mp4.mp4";

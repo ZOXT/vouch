@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_ORIGIN?: string;
+  readonly VITE_HERO_VIDEO_URL?: string;
 }
 
 interface ImportMeta {

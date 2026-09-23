@@ -22,6 +22,13 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { Avatar } from "@/components/avatar";
 import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/utils";
+import { HERO_VIDEO_URL } from "@/lib/config";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import person1 from "./assets/person-1.webp";
 import person2 from "./assets/person-2.webp";
 import {
@@ -447,13 +454,30 @@ export const LandingPage = () => {
                 Start collecting, it&apos;s free
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <a
-                href="#how-it-works"
-                className="inline-flex h-12 items-center gap-2 rounded-xl border border-gray-300 bg-white px-7 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50"
-              >
-                <Play className="h-4 w-4" />
-                See how it works
-              </a>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="inline-flex h-12 items-center gap-2 rounded-xl border border-gray-300 bg-white px-7 text-base font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50">
+                    <Play className="h-4 w-4 fill-current" />
+                    See how it works
+                  </button>
+                </DialogTrigger>
+                <DialogContent
+                  className="max-w-3xl border-0 bg-black p-0"
+                  aria-describedby={undefined}
+                >
+                  <DialogTitle className="sr-only">
+                    Vouch product demo
+                  </DialogTitle>
+                  <video
+                    src={HERO_VIDEO_URL}
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    className="aspect-video w-full rounded-2xl"
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
